@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daksh . | /root/portfolio</title>
+    <meta name="description" content="Personal portfolio of Daksh Khurana - Security Researcher & AI Engineer.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Marked.js is no longer needed -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --terminal-green: #00ff41;
+            --terminal-dim: #008F11;
+            --alert: #ef4444;
+            --highlight: #facc15;
+            --text-base: #e5e5e5;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-base);
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .text-matrix { color: var(--terminal-green); }
+        
+        /* CRT Scanline Effect */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.1) 50%,
+                rgba(0,0,0,0.1)
+            );
+            background-size: 100% 4px;
+            position: fixed;
+            top: 0; right: 0; bottom: 0; left: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        /* Custom Selection */
+        ::selection {
+            background: var(--terminal-green);
+            color: #000;
+        }
+
+        /* Terminal Box Styling */
+        .terminal-box {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #333;
+            box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.7);
+            transition: all 0.2s ease;
+        }
+        .terminal-box:hover {
+            border-color: var(--terminal-dim);
+            box-shadow: 4px 4px 0 0 var(--terminal-dim);
+            transform: translate(-2px, -2px);
+        }
+
+        /* Blinking Cursor */
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Timeline Line */
+        .timeline-line {
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, var(--terminal-green), transparent);
+        }
+
+        /* Smooth Scroll Offset */
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+        
+        .hidden { display: none; }
+
+        /* CERT LIST FIX: Enforce padding and flex for alignment */
+        .cert-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 4px;
+            margin-bottom: 4px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+        .cert-list-item > span:first-child {
+            flex-grow: 1;
+            padding-right: 1rem; /* Space between title and date */
+        }
+        .cert-list-item > span:last-child {
+            flex-shrink: 0;
+            text-align: right;
+        }
+        
+        /* Affiliations Tile Style */
+        .affiliate-tile {
+            background: rgba(40, 40, 60, 0.2); /* Dark purple tint */
+            border: 1px solid rgba(120, 120, 160, 0.3);
+            transition: all 0.2s ease;
+        }
+        .affiliate-tile:hover {
+            background: rgba(40, 40, 60, 0.4);
+            border-color: #8b5cf6; /* Violet/Purple */
+        }
+    </style>
+</head>
+<body class="antialiased relative">
+
+    <div class="scanlines"></div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-50 bg-[#050505]/90 backdrop-blur-sm border-b border-white/5">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex justify-between items-center font-mono text-sm">
+            <a href="#" class="text-matrix font-bold flex items-center gap-2">
+                <span class="text-white">~/</span>d4mr0<span class="cursor-blink">_</span>
+            </a>
+            
+            <div class="hidden md:flex gap-6 text-gray-400">
+                <a href="#work" class="hover:text-white transition-colors">[ work ]</a>
+                <a href="#research" class="hover:text-white transition-colors">[ research ]</a>
+                <a href="#skills" class="hover:text-white transition-colors">[ arsenal ]</a>
+                <a href="#creds" class="hover:text-white transition-colors">[ creds ]</a>
+                <a href="#intel" class="hover:text-white transition-colors">[ intel ]</a>
+                
+            </div>
+
+            <a href="#contact" onclick="scrollToContact(event)" class="text-xs border border-white/20 px-3 py-1 rounded hover:bg-white hover:text-black transition-all">
+                CONTACT
+            </a>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 pt-32 pb-24">
+
+        <!-- 1. INTRO / HERO -->
+        <section class="mb-24">
+            <p class="font-mono text-green-500 text-sm mb-4">
+                > INITIALIZING SECURE SESSION... <span class="text-white">OK</span>
+            </p>
+            <h1 class="text-6xl md:text-8xl font-bold text-white tracking-tighter mb-6">
+                d4mr0 ...
+            </h1>
+            <div class="text-xl md:text-2xl text-gray-400 font-light max-w-2xl leading-relaxed">
+                Offensive Security Engineer & AI Researcher. <br>
+                <span class="text-white font-medium">I break systems to make them unbreakable.</span>
+            </div>
+            
+            <div class="mt-10 flex gap-4 font-mono text-sm">
+                <a href="https://github.com/1n1t6Sh3ll/Portfolio/blob/main/CV.pdf"  target="_blank"  class="bg-white text-black px-6 py-3 font-bold hover:bg-gray-200 transition-colors">
+                    Résumé
+                </a>
+                <a href="https://github.com/1n1t6Sh3ll" target="_blank" class="border border-white/20 px-6 py-3 text-gray-300 hover:border-white hover:text-white transition-colors">
+                    GITHUB #1
+                </a>
+                <a href="https://github.com/n16htb0t" target="_blank" class="border border-white/20 px-6 py-3 text-gray-300 hover:border-white hover:text-white transition-colors">
+                    GITHUB #2
+                </a>
+
+                <a href="https://linkedin.com/in/dakshkhurana1222/" target="_blank" class="border border-white/20 px-6 py-3 text-gray-300 hover:border-white hover:text-white transition-colors">
+                    LINKEDIN
+                </a>
+            </div>
+
+            <!-- Compact Stats (REVISED to 3 columns) -->
+            <div class="grid grid-cols-3 gap-4 mt-16 pt-8 border-t border-white/10 font-mono text-xs">
+                <div class="col-span-1">
+                    <span class="block text-2xl font-bold text-white mb-1">15+</span>
+                    <span class="text-gray-500">VERIFIED CERTS</span>
+                </div>
+                <div class="col-span-1">
+                    <span class="block text-2xl font-bold text-white mb-1">40+</span>
+                    <span class="text-gray-500">VDP HALL OF FAMES</span>
+                </div>
+                <div class="col-span-1">
+                    <span class="block text-2xl font-bold text-white mb-1">4+years</span>
+                    <span class="text-gray-500">FIELD EXPERIENCE</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. WORK HISTORY -->
+        <section id="work" class="mb-24">
+            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
+                <h2 class="text-3xl font-bold text-white">Mission Log</h2>
+                <span class="font-mono text-xs text-gray-500 hidden md:block">/var/log/experience</span>
+            </div>
+
+            <div class="relative pl-8 space-y-12">
+                <div class="timeline-line"></div>
+
+                <!-- Job 1: Penetration Tester -->
+                <div class="relative">
+                    <div class="absolute -left-[37px] top-1.5 w-3 h-3 bg-[#050505] border-2 border-green-500 rounded-full"></div>
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2">
+                        <h3 class="text-xl font-bold text-white">Penetration Tester</h3>
+                        <span class="font-mono text-xs text-green-400">Jul. 2024 — Aug. 2025</span>
+                    </div>
+                    <p class="text-sm text-gray-400 font-mono mb-3">Bright Security | San Rafael, CA</p>
+                    <ul class="list-disc list-outside ml-4 text-gray-400 text-sm space-y-1">
+                        <li>Conducted comprehensive VAPT across client and internal applications (web, mobile, cloud, thick client).</li>
+                        <li>Conducted internal security testing and audited cloud infrastructure to identify and remediate misconfigurations, risks, and vulnerabilities, enhancing overall security posture.</li>
+                        <li>Actively contributed to internal security research and tool development, enhancing the efficiency and effectiveness of in-house security solutions.</li>
+                        <li>Effectively communicated technical findings to technical and non-technical stakeholders, improving reporting quality, onboarding new clients, and strengthening relationships with existing ones.</li>
+                    </ul>
+                </div>
+
+                <!-- Job 2: Security Researcher (Freelance) -->
+                <div class="relative">
+                    <div class="absolute -left-[37px] top-1.5 w-3 h-3 bg-[#050505] border-2 border-gray-500 rounded-full"></div>
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2">
+                        <h3 class="text-xl font-bold text-white">Security Researcher (Freelance)</h3>
+                        <span class="font-mono text-xs text-gray-500">Mar. 2022 — Aug. 2025</span>
+                    </div>
+                    <p class="text-sm text-gray-400 font-mono mb-3">Bugcrowd | Remote, UK</p>
+                    <ul class="list-disc list-outside ml-4 text-gray-400 text-sm space-y-1">
+                        <li>Actively participated in bug bounty programs, showcasing expertise in identifying and responsibly disclosing vulnerabilities.</li>
+                        <li>Strengthened technical skills and deepened understanding of cybersecurity through hands-on engagement in ethical hacking practices.</li>
+                    </ul>
+                </div>
+
+                <!-- Job 3: Core Team Member -->
+                <div class="relative">
+                    <div class="absolute -left-[37px] top-1.5 w-3 h-3 bg-[#050505] border-2 border-gray-500 rounded-full"></div>
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2">
+                        <h3 class="text-xl font-bold text-white">Core Team Member</h3>
+                        <span class="font-mono text-xs text-gray-500">Mar. 2024 — Aug. 2025</span>
+                    </div>
+                    <p class="text-sm text-gray-400 font-mono mb-3">AutoSecurityy | India</p>
+                    <ul class="list-disc list-outside ml-4 text-gray-400 text-sm space-y-1">
+                        <li>Conducted in-depth research on emerging automobile security threats and industry trends to inform strategic initiatives and content creation.</li>
+                        <li>Created targeted educational content- including articles, videos, and infographics- aimed at raising cybersecurity awareness among consumers and automotive professionals.</li>
+                    </ul>
+                </div>
+                
+
+                <!-- Job 4: Cloud Security Intern -->
+                <div class="relative">
+                    <div class="absolute -left-[37px] top-1.5 w-3 h-3 bg-[#050505] border-2 border-gray-500 rounded-full"></div>
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2">
+                        <h3 class="text-xl font-bold text-white">Cloud Security Intern</h3>
+                        <span class="font-mono text-xs text-gray-500">Nov. 2023 — Jan. 2024</span>
+                    </div>
+                    <p class="text-sm text-gray-400 font-mono mb-3">Virtually Testing Foundation | CA</p>
+                    <ul class="list-disc list-outside ml-4 text-gray-400 text-sm space-y-1">
+                        <li>Utilized AWS CloudTrail, CloudWatch, AWS Cognito, Azure Active Directory, and Microsoft Sentinel to secure cloud infrastructures.</li>
+                        <li>Participated in practical labs, gaining hands-on experience in threat detection and mitigation while developing strong soft skills.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. PROJECTS -->
+        <section id="research" class="mb-24">
+            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
+                <h2 class="text-3xl font-bold text-white">Research & Code</h2>
+                <span class="font-mono text-xs text-gray-500 hidden md:block">/home/daksh/projects</span>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Project 1: LLM Security Evaluation -->
+                 <!-- Project 3: A Meta-Analysis on Early Detection of Skin Cancer using Graph Neural Networks. -->
+                <a href="#" class="terminal-box p-6 block group">
+                    <div class="flex justify-between items-start mb-4">
+                        <i data-lucide="activity" class="text-red-400"></i>
+                        <span class="text-[10px] font-mono border border-red-500/30 text-red-400 px-2 py-0.5 rounded">Fall 2025</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">A Meta-Analysis on Early Detection of Skin Cancer using Graph Neural Networks</h3>
+                    <p class="text-sm text-gray-400 mb-4">Architected a GNN model to classify skin disease images. Conducting literature review for peer-reviewed publication.</p>
+                    <div class="text-xs font-mono text-gray-600">#GNN #PyTorch #BigDataAnalytics</div>
+                </a>
+                <a href="#" class="terminal-box p-6 block group">
+                    <div class="flex justify-between items-start mb-4">
+                        <i data-lucide="file-code" class="text-purple-400"></i>
+                        <span class="text-[10px] font-mono border border-purple-500/30 text-purple-400 px-2 py-0.5 rounded">Fall 2025</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Comparative Security Evaluation: Human vs. LLM Applications</h3>
+                    <p class="text-sm text-gray-400 mb-4">Independent study comparing vulnerability density in human-written vs. LLM-generated code. Developing security benchmarks.</p>
+                    <div class="text-xs font-mono text-gray-600">#LLMSecurity #CodeAnalysis</div>
+                </a>
+                
+                <a href="#" target="_blank" class="terminal-box p-6 block group">
+                    <div class="flex justify-between items-start mb-4">
+                        <i data-lucide="database" class="text-pink-400"></i>
+                        <span class="text-[10px] font-mono border border-yellow-500/30 text-pink-400 px-2 py-0.5 rounded">Fall 2025</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">EasyTUS: Efficient Table Union Search (CSCI 3331)</h3>
+                    <p class="text-sm text-gray-400 mb-4">Reviewed and analyzed the EasyTUS research paper and implemented a PoC demonstrating fuzzy table-matching.</p>
+                    <div class="text-xs font-mono text-gray-600">#PL/SQL #AdvanceDatabases #ReviewPresentation </div>
+                </a>
+<!-- Project 5: Smart Agriculture System (ML) -->
+                <a href="https://github.com/n16htb0t/Ml-Project-Agrimart" target="_blank" class="terminal-box p-6 block group">
+                    <div class="flex justify-between items-start mb-4">
+                        <i data-lucide="sprout" class="text-lime-400"></i>
+                        <span class="text-[10px] font-mono border border-lime-500/30 text-lime-400 px-2 py-0.5 rounded">Spring 2025</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Smart Agriculture Platform: ML</h3>
+                    <p class="text-sm text-gray-400 mb-4">AI-driven farming system with crop/fertilizer recommendations (Random Forest, Decision Tree) integrating weather and price trends.</p>
+                    <div class="text-xs font-mono text-gray-600">#Scikit-Learn #IoT Sensors</div>
+                </a>
+                <!-- Project 2: Embedded Security with AI -->
+                <a href="https://github.com/n16htb0t/EmbeddedAI/" target="_blank" class="terminal-box p-6 block group">
+                    <div class="flex justify-between items-start mb-4">
+                        <i data-lucide="cpu" class="text-yellow-400"></i>
+                        <span class="text-[10px] font-mono border border-yellow-500/30 text-yellow-400 px-2 py-0.5 rounded">Jun 2024</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Embedded Security with AI using StreamLit</h3>
+                    <p class="text-sm text-gray-400 mb-4">Automated recon tool using YOLO and LLMs to analyze hardware datasheets and FCCID information.</p>
+                    <div class="text-xs font-mono text-gray-600">#HardwareSecurity #YOLO #Python</div>
+                </a>
+
+                <a href="#" class="terminal-box p-6 block group">
+                    <div class="flex justify-between items-start mb-4">
+                        <i data-lucide="database" class="text-blue-400"></i>
+                        <span class="text-[10px] font-mono border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded">Jun 2024</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Fleet Management System: Database</h3>
+                    <p class="text-sm text-gray-400 mb-4">Developed an SQL-based database for vehicle registration, driver management, route planning, and maintenance scheduling.</p>
+                    <div class="text-xs font-mono text-gray-600">#SQL #Systems #DatabaseDesign</div>
+                </a>
+
+                <a href="#" class="terminal-box p-6 block group">
+                    <div class="flex justify-between items-start mb-4">
+                        <i data-lucide="Radio" class="text-purple-400"></i>
+                        <span class="text-[10px] font-mono border border-blue-500/30 text-purple-400 px-2 py-0.5 rounded">Fall 2023</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Signals in the Wild: Exploring RF Systems using HackRF One</h3>
+                    <p class="text-sm text-gray-400 mb-4">Developed and delivered a live demo showcasing ADS-B aircraft tracking, RF signal decoding, and replay attacks on low-frequency devices using HackRF One, GNU Radio, and Python.</p>
+                    <div class="text-xs font-mono text-gray-600">#RadioFrequency #SDRs #FlightTracker</div>
+                </a>
+                
+                <!-- Project 4: Teen Sage Mobile App -->
+                <a href="https://github.com/1n1t6Sh3ll/TeenSage/" target="_blank" class="terminal-box p-6 block group">
+                    <div class="flex justify-between items-start mb-4">
+                        <i data-lucide="smartphone" class="text-green-400"></i>
+                        <span class="text-[10px] font-mono border border-green-500/30 text-green-400 px-2 py-0.5 rounded">Dec 2022</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Teen Sage (Mobile Application)</h3>
+                    <p class="text-sm text-gray-400 mb-4">Developed a mobile application focused on adolescent mental health and sex education.</p>
+                    <div class="text-xs font-mono text-gray-600">#Flutter #GCP #Firebase</div>
+                </a>
+
+                
+
+                <!-- Project 6: Fleet Management DB -->
+                
+                
+
+                <a href="#" class="terminal-box p-6 block group">
+                    <div class="flex justify-between items-start mb-4">
+                        <i data-lucide="Car" class="text-green-400"></i>
+                        <span class="text-[10px] font-mono border border-green-500/30 text-green-400 px-2 py-0.5 rounded">Dec 2020</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Facial Landmark & Object Detection (Hackathon Project)</h3>
+                    <p class="text-sm text-gray-400 mb-4">Recreated a TensorFlow.js project from a YouTube tutorial featuring real-time facial landmark detection, “Miss Happening” capture, and object recognition; showcased at a hackathon to demonstrate practical computer vision applications.</p>
+                    <div class="text-xs font-mono text-gray-600">#OpenCV #tensorflow</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 4. ARSENAL (SKILLS) -->
+        <section id="skills" class="mb-24">
+            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
+                <h2 class="text-3xl font-bold text-white">Neural Arsenal</h2>
+                <span class="font-mono text-xs text-gray-500 hidden md:block">/etc/skills</span>
+            </div>
+
+            <div class="grid md:grid-cols-4 gap-8 text-sm">
+                <div>
+                    <h4 class="font-mono text-red-400 mb-4 border-b border-red-500/20 pb-1">OFFENSIVE</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>Web/Mobile VAPT</li>
+                        <li>Active Directory</li>
+                        <li>Burp Suite Pro, Metasploit, Sqlmap</li>
+                        <li>Vulnerability Management</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-mono text-cyan-400 mb-4 border-b border-cyan-500/20 pb-1">CLOUD/INFRA</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>AWS (IAM/S3/CloudTrail)</li>
+                        <li>Azure Security, GCP</li>
+                        <li>Network Security, Endpoint Security</li>
+                        <li>Radio Hacking</li>
+                        <li>Wireshark, Splunk</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-mono text-purple-400 mb-4 border-b border-purple-500/20 pb-1">AI/ENGINEERING</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>Python, C/C++, JavaScript</li>
+                        <li>TensorFlow/PyTorch, LLM/Langchain</li>
+                        <li>Big Data Analytics, SQL/NoSQL</li>
+                        <li>Flutter, Solidity, Bash Scripting</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-mono text-yellow-400 mb-4 border-b border-yellow-500/20 pb-1">HARDWARE/IOT</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>Firmware Testing, Binwalk</li>
+                        <li>ARM & x86 Assembly</li>
+                        <li>Binary Exploitation, UART, JTAG</li>
+                        <li>IoT Security, CANbus, Modbus</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. VALIDATION (AWARDS/CERTS) -->
+        <section id="creds" class="mb-24">
+            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
+                <h2 class="text-3xl font-bold text-white">Validation Log</h2>
+                <span class="font-mono text-xs text-gray-500 hidden md:block">/var/log/auth</span>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+                
+                <!-- Certifications -->
+                <div>
+                    <h3 class="text-white font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="shield-check" class="text-green-500"></i> VERIFIED CREDENTIALS
+                    </h3>
+                    <div id="certs-list" class="space-y-1 text-sm font-mono">
+                        <!-- JS injected content goes here -->
+                    </div>
+                </div>
+
+                <!-- Achievements -->
+                <div class="space-y-8">
+                    <div>
+                        <h3 class="text-white font-bold mb-6 flex items-center gap-2">
+                            <i data-lucide="trophy" class="text-yellow-500"></i> COMPETITIVE VICTORIES
+                        </h3>
+                        <div id="awards-list" class="space-y-3 text-sm">
+                            <!-- JS injected content goes here -->
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="award" class="text-yellow-500"></i> HALL OF FAME (40+)
+                        </h3>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Dell Technologies</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Pinterest</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">EC-Council</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Wageningen Univ</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Pizza Hut</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Blue Jeans</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Careem</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Humble Bundle</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">SAP Concur</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Under Armor</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Unilever</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Viator</span>
+                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">SmartThings</span>
+                            <span class="text-xs border border-gray-700 text-gray-500 px-2 py-1">+ 25 More</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. EDUCATION & AFFILIATIONS -->
+        <section id="affiliations" class="mb-24">
+            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
+                <h2 class="text-3xl font-bold text-white">Academic Path</h2>
+                <span class="font-mono text-xs text-gray-500 hidden md:block">/etc/education</span>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+                
+                <!-- Education Block -->
+                <div class="terminal-box p-6 space-y-4">
+                    <h3 class="text-xl font-bold text-white">Bachelor of Science in Computer Science (Dual Program)</h3>
+                    <p class="text-lg text-gray-400 font-mono">Fairleigh Dickinson University & Caucasus University</p>
+                    <p class="text-sm text-gray-500 font-mono">Anticipated May 2026</p>
+                    
+                    <div class="mt-4 space-y-3">
+                        <h4 class="text-sm font-semibold text-white border-b border-gray-700 pb-2">Relevant Coursework:</h4>
+                        <ul class="list-disc list-outside ml-4 text-sm text-gray-400 space-y-1">
+                            <li><span class="font-semibold text-cyan-400">CS:</span> Algorithms, Machine Learning, Big Data Analytics, Computer Networks.</li>
+                            <li><span class="font-semibold text-cyan-400">Math:</span> Calculus, Linear Algebra, Probability & Statistics.</li>
+                            <li><span class="font-semibold text-cyan-400">Electives:</span> Deep learning & Application, Security Application, Forensic Psychology.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Affiliations Block (Tiles) -->
+                <div class="terminal-box p-6 space-y-4">
+                    <h3 class="text-xl font-bold text-white">Professional Organization / Memberships</h3>
+                    <div class="grid grid-cols-2 gap-3 font-mono text-sm">
+                        
+                        <div class="affiliate-tile p-3 rounded-lg"> 
+                            <a href="https://www.fdu.edu/academics/global-education/global-scholars/" target="_blank">
+                            <span class="text-purple-400 font-bold block">Leader, Global Scholars</span>
+                            <span class="text-gray-600 text-[10px]">FDU (Fall 2025)</span>
+                            </a>
+                        </div>
+                        <div class="affiliate-tile p-3 rounded-lg">
+                            <a href="https://carhackers.space/" target="_blank">
+                            <span class="text-purple-400 font-bold block">Member, Car Hackers Space</span>
+                            <span class="text-gray-600 text-[10px]">Oct 2025</span>
+                            </a>
+                        </div>
+                        <div class="affiliate-tile p-3 rounded-lg">
+                            <a href="https://www.ieee.org/membership/join" target="_blank">
+                            <span class="text-purple-400 font-bold block">Member #101722049, IEEE 
+                            </span>
+                            <span class="text-gray-600 text-[10px]">Jul 2025</span>
+                            </a>
+                        </div>
+                        <div class="affiliate-tile p-3 rounded-lg">
+                            <a href="https://autosecurityy.com/" target="_blank">
+                            <span class="text-purple-400 font-bold block">Core Team, AutoSecurityy</span>
+                            <span class="text-gray-600 text-[10px]">Mar 2024</span>
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. INTEL FEED (EVENTS & BLOGS) -->
+        <section id="intel" class="mb-24">
+            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
+                <h2 class="text-3xl font-bold text-white">Intel Feed</h2>
+                <span class="font-mono text-xs text-gray-500 hidden md:block">/var/log/activity</span>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+                
+                <!-- Blog -->
+                <div class="terminal-box p-6">
+                    <h3 class="text-cyan-400 font-bold font-mono mb-6">/ WRITE-UPS</h3>
+                    <div class="space-y-4">
+                        <a href="https://medium.com/autosecurityy/guarding-the-grid-securing-the-future-of-ev-charging-stations-042090262453" target="_blank" class="block group">
+                            <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">Guarding the Grid: Securing EV Charging Stations</h4>
+                            <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
+                                <span>Insight: Automotive IoT</span>
+                                <span>Sep 2025</span>
+                            </div>
+                        </a>
+                        
+                        <!-- Hidden Blogs Container -->
+                        <div id="additional-blogs" class="hidden space-y-4">
+                            <a href="#" class="block group">
+                                <!-- <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">LLM Code Security: A Critical Analysis</h4>
+                                <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
+                                    <span>Research: AI Security</span>
+                                    <span>Aug 2025</span>
+                                </div>
+                            </a>
+                            <a href="#" class="block group">
+                                <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">AWS Cognito: Hardening Identity Layer</h4>
+                                <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
+                                    <span>Writeup: Cloud</span>
+                                    <span>Jun 2025</span>
+                                </div>
+                            </a>
+                            <a href="#" class="block group">
+                                <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">Deconstructing CAN Bus</h4>
+                                <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
+                                    <span>Insight: Embedded</span>
+                                    <span>Mar 2025</span>
+                                </div> -->
+                            </a>
+                        </div>
+
+                        <button id="toggle-blogs-btn" onclick="toggleBlogEvents()" class="text-xs text-gray-500 hover:text-white font-mono mt-2 border-t border-gray-800 w-full pt-2 text-left">
+                            [+] EXPAND LOGS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Events -->
+                <div class="terminal-box p-6">
+                    <h3 class="text-cyan-400 font-bold font-mono mb-6">/ FIELD OPS</h3>
+                    
+                    <!-- Upcoming Events -->
+                    <div class="mb-6">
+                        <h4 class="text-xs font-bold text-green-500 mb-3 border-b border-gray-800 pb-1">UPCOMING SCHEDULE</h4>
+                        <div id="upcoming-events-container" class="space-y-3">
+                            <!-- JS Injected -->
+                        </div>
+                    </div>
+
+                    <!-- Past Events -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 mb-3 border-b border-gray-800 pb-1">ARCHIVE</h4>
+                        <div id="past-events-visible" class="space-y-3">
+                            <!-- JS Injected (Latest 3) -->
+                        </div>
+
+                        <!-- Hidden Container for Remaining Past Events -->
+                        <div id="past-events-hidden" class="hidden space-y-3 mt-3">
+                            <!-- JS Injected (Remaining) -->
+                        </div>
+                        
+                        <button id="toggle-past-events-btn" onclick="togglePastEvents()" class="text-xs text-gray-500 hover:text-white font-mono mt-4 border-t border-gray-800 w-full pt-2 text-left" style="display: none;">
+                            [+] EXPAND ARCHIVE
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer id="contact" class="border-t border-white/10 pt-12 pb-6 text-center">
+            <h2 class="text-2xl font-bold text-white mb-6">ACCESS GRANTED.</h2>
+            <div class="flex justify-center space-x-6 text-gray-400 mb-6">
+                <a href="https://linkedin.com/in/dakshkhurana1222/" target="_blank" class="hover:text-white transition-colors" title="LinkedIn Profile">
+                    <i data-lucide="linkedin" class="w-6 h-6"></i>
+                </a>
+                <a href="https://github.com/1n1t6Sh3ll" target="_blank" class="hover:text-white transition-colors" title="GitHub Profile #1">
+                    <i data-lucide="github" class="w-6 h-6"></i>
+                </a>
+                <a href="https://github.com/n16htb0t" target="_blank" class="hover:text-white transition-colors" title="GitHub Profile #2">
+                    <i data-lucide="github" class="w-6 h-6"></i>
+                </a>
+                <a href="mailto:dakshkhuranaofficial@gmail.com" class="hover:text-white transition-colors" title="Email: dakshkhuranaofficial@gmail.com">
+                    <i data-lucide="mail" class="w-6 h-6"></i>
+                </a>
+            </div>
+            <p class="text-gray-600 text-xs mt-12 font-mono flex flex-col sm:flex-row justify-center items-center gap-2">
+                <span>SYSTEM_ID: DAKSH_PF_V6.0 // ENCRYPTED</span>
+            </p>
+        </footer>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+        const apiKey = ""; // Runtime provided key
+
+        // --- Event Data ---
+        const ALL_EVENTS = [
+            { name: "IEEE Summit on Applied AI for BioInformatics and Cybersecurity", date: "Dec 9, 2025", role: "SPEAKER" },
+            { name: "Academic Conference on Africa, UN HQ", date: "Dec 1, 2025", role: "DELEGATE" },
+            { name: "Building Scalable GenAI Product (IEEE)", date: "Oct 29, 2025", role: "ATTENDED" },
+            { name: "GlobalMindED/FSUN Event, UN HQ", date: "Oct 20, 2025", role: "DELEGATE" },
+            { name: "Evolution of Lang Tech (IEEE)", date: "Sep 24, 2025", role: "ATTENDED" },
+            { name: "DeGameFi 2024, Tbilisi", date: "Jun 22, 2024", role: "ATTENDED" },
+            { name: "Nullcon Goa", date: "Sep 25, 2023", role: "ATTENDED" },
+            { name: "Seasides Goa", date: "Sep 20, 2023", role: "ATTENDED" },
+            { name: "BSides Bangalore", date: "Jun 1, 2023", role: "ATTENDED" },
+            { name: "BSides Delhi", date: "Nov 11, 2022", role: "ATTENDED" },
+            { name: "BSides Ahmedabad", date: "Oct 1, 2022", role: "ATTENDED" },
+            { name: "Defcon Delhi 9111 0x5", date: "Aug 6, 2022", role: "ATTENDED" },
+            { name: "Harvard US-India Initiative", date: "Feb 5, 2021", role: "DELEGATE" }
+        ];
+        
+        // --- Custom Sorting Logic for Certs/Awards in Static HTML ---
+        function parseDate(dateStr) {
+            const parts = dateStr.split(' ');
+            if (parts.length === 2) {
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const month = monthNames.indexOf(parts[0]) + 1;
+                const year = parseInt(parts[1], 10);
+                return new Date(year, month - 1);
+            }
+            return new Date(0);
+        }
+
+        const CERT_DATA = [
+            { name: "Certified Red Team Expert (CRTE)", date: "Sep 2025", type: "Red" },
+            { name: "Supervised ML (Scikit-Learn)", date: "Apr 2025", type: "AI" },
+            { name: "Web App Pentester Extreme (eWPTXv2)", date: "Oct 2024", type: "Red" },
+            { name: "Certified Cloud Security Practitioner (CCSP-AWS)", date: "Jun 2024", type: "Cloud" },
+            { name: "AWS Certified Security Specialty", date: "Jan 2024", type: "Cloud" },
+            { name: "Microsoft Azure Security (AZ-500)", date: "Jan 2024", type: "Cloud" },
+            { name: "Microsoft SC-900", date: "Jan 2024", type: "Cloud" },
+            { name: "210W-05 ICS Cybersecurity Risk", date: "Sep 2023", type: "Specialized" },
+            { name: "Network Essentials (CISCO)", date: "Apr 2023", type: "Foundation" },
+            { name: "Certified Ethical Hacker (Practical)", date: "Mar 2023", type: "Red" },
+            { name: "ISEA Certified Cyber Hygiene Practitioner", date: "Feb 2023", type: "Foundation" },
+            { name: "Certified AppSec Practitioner", date: "Feb 2023", type: "Foundation" },
+            { name: "Python Programming (edX)", date: "Feb 2023", type: "Foundation" },
+            { name: "Automation Scripts Using Bash (Coursera)", date: "Sep 2022", type: "Foundation" },
+            { name: "Hardware Security (Coursera)", date: "Sep 2022", type: "Specialized" }
+        ].sort((a, b) => parseDate(b.date) - parseDate(a.date)); // Sort Descending
+
+        const AWARD_DATA = [
+            { rank: "TOP 5", name: "BTU Hackathon", date: "Jun 2024", type: "Green" },
+            { rank: "TOP 10", name: "KRMU Hacks & Ideathon AICTE", date: "Feb 2023", type: "Gray" },
+            { rank: "2ND PLACE", name: "Technovation", date: "Dec 2022", type: "Green" },
+            { rank: "1ST PLACE", name: "Smart Punjab Hackathon", date: "Nov 2022", type: "Green" },
+            { rank: "1ST PLACE", name: "US Airforce Steganography CTF, MLH.io", date: "Nov 2020", type: "Red" },
+            { rank: "2ND PLACE", name: "Agritech Hackathon", date: "Nov 2020", type: "Green" },
+            { rank: "PARTICIPATION", name: "HackUMBC", date: "Nov 2020", type: "Gray" },
+            { rank: "PARTICIPATION", name: "NextSTEP Hackathons", date: "Nov 2020", type: "Gray" }
+        ].sort((a, b) => parseDate(b.date) - parseDate(a.date)); // Sort Descending
+
+        // Helper to generate Cert HTML
+        function generateCertHtml(cert) {
+            let color = 'text-gray-400';
+            if (cert.type === 'Red') color = 'text-red-400';
+            else if (cert.type === 'Cloud') color = 'text-blue-400';
+            else if (cert.type === 'AI') color = 'text-green-400';
+            else if (cert.type === 'Specialized') color = 'text-orange-400';
+
+            return `
+                <div class="cert-list-item">
+                    <span class="${color} font-semibold">${cert.name}</span>
+                    <span class="text-gray-600 text-[11px]">${cert.date}</span>
+                </div>
+            `;
+        }
+        
+        // Helper to generate Award HTML
+        function generateAwardHtml(award) {
+            let rankClass = 'text-gray-400 font-bold';
+            let nameClass = 'text-gray-300';
+            if (award.type === 'Green') {
+                rankClass = 'text-green-400 font-bold';
+                nameClass = 'text-white';
+            } else if (award.type === 'Red') {
+                rankClass = 'text-red-400 font-bold';
+                nameClass = 'text-white';
+            }
+
+            return `
+                <div class="flex justify-between items-center bg-white/5 p-2 rounded border border-white/5">
+                    <span class="${rankClass} font-bold mr-3 shrink-0">${award.rank}</span>
+                    <span class="${nameClass} flex-grow">${award.name}</span>
+                    <span class="text-gray-500 text-xs font-mono ml-2 shrink-0">${award.date}</span>
+                </div>
+            `;
+        }
+
+        // --- UI Functions ---
+        function createEventHtml(event) {
+            let roleClass = "text-gray-500";
+            if(event.role === "SPEAKER") roleClass = "text-red-400 font-bold";
+            else if(event.role === "DELEGATE") roleClass = "text-blue-400 font-bold";
+
+            return `
+                <div class="flex justify-between items-start text-sm">
+                    <div class="flex-grow">
+                        <p class="text-gray-300 font-medium">${event.name}</p>
+                        <p class="text-[10px] font-mono ${roleClass}">[${event.role}]</p>
+                    </div>
+                    <span class="text-xs font-mono text-gray-600 whitespace-nowrap ml-2 shrink-0">${event.date}</span>
+                </div>
+            `;
+        }
+
+        function renderEvents() {
+            const today = new Date(); 
+            const upcoming = [], past = [];
+            
+            ALL_EVENTS.map(e => ({...e, d: new Date(e.date)})).sort((a,b)=>b.d-a.d).forEach(e => {
+                if(e.d < today) past.push(e); else upcoming.push(e);
+            });
+
+            document.getElementById('upcoming-events-container').innerHTML = upcoming.length 
+                ? upcoming.map(createEventHtml).join('') 
+                : '<div class="text-xs text-gray-600 italic">No upcoming intel.</div>';
+            
+            if(past.length > 0) {
+                document.getElementById('past-events-visible').innerHTML = past.slice(0, 3).map(createEventHtml).join('');
+                document.getElementById('past-events-hidden').innerHTML = past.slice(3).map(createEventHtml).join('');
+                document.getElementById('toggle-past-events-btn').style.display = 'block';
+                document.getElementById('toggle-past-events-btn').innerText = `[+] EXPAND ARCHIVE (${past.length - 3} MORE)`;
+            } else {
+                document.getElementById('past-events-visible').innerHTML = '<p class="text-gray-500 text-sm italic">No historical events.</p>';
+            }
+            
+            // Inject Certs and Awards
+            document.getElementById('certs-list').innerHTML = CERT_DATA.map(generateCertHtml).join('');
+            document.getElementById('awards-list').innerHTML = AWARD_DATA.map(generateAwardHtml).join('');
+        }
+
+        function togglePastEvents() {
+            const el = document.getElementById('past-events-hidden');
+            const btn = document.getElementById('toggle-past-events-btn');
+            el.classList.toggle('hidden');
+            btn.innerText = el.classList.contains('hidden') ? `[+] EXPAND ARCHIVE` : `[-] COLLAPSE ARCHIVE`;
+        }
+
+        function toggleBlogEvents() {
+            const el = document.getElementById('additional-blogs');
+            const btn = document.getElementById('toggle-blogs-btn');
+            el.classList.toggle('hidden');
+            btn.innerText = el.classList.contains('hidden') ? `[+] EXPAND LOGS` : `[-] COLLAPSE LOGS`;
+        }
+        
+        function scrollToContact(e) {
+            e.preventDefault();
+            const element = document.getElementById('contact');
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Run rendering logic on page load
+        window.onload = renderEvents;
+    </script>
+</body>
+</html>
