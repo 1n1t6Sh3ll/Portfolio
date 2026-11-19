@@ -1321,7 +1321,7 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { if (KEYMAP[e.code]) keys[KEYMAP[e.code]] = 0; });
 addEventListener('blur', clearKeys);
 document.querySelectorAll('#touch button').forEach(b => {
-  const on = e => { e.preventDefault(); keys[b.dataset.k] = 1; b.classList.add('on'); }, off = e => { e.preventDefault(); keys[b.dataset.k] = 0; b.classList.remove('on'); };
+  const on = e => { e.preventDefault(); if (focus && (b.dataset.k === 'up' || b.dataset.k === 'down')) exitFocus(); keys[b.dataset.k] = 1; b.classList.add('on'); }, off = e => { e.preventDefault(); keys[b.dataset.k] = 0; b.classList.remove('on'); };
   b.addEventListener('pointerdown', on); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, off));
   b.addEventListener('contextmenu', e => e.preventDefault());
 });
