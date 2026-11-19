@@ -40,7 +40,6 @@
   #prompt small { display: block; font-size: 12px; color: var(--ink-3); }
   #prompt kbd { font-size: 13px; padding: 3px 9px; }
   #prompt:hover { background: #fff; }
-  @media (max-width: 760px) { #prompt { bottom: auto; top: 46%; } }
   #tip { position: fixed; z-index: 30; pointer-events: none; padding: 6px 11px; border-radius: 10px; background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 600;
          white-space: nowrap; transform: translate(14px, 14px); opacity: 0; transition: opacity .15s; }
   #tip.show { opacity: 1; }
@@ -81,7 +80,9 @@
   #drawer { position: fixed; top: 216px; right: 16px; max-height: calc(100vh - 306px); width: 390px; z-index: 20; display: flex; flex-direction: column; overflow: hidden;
             transform: translateX(calc(100% + 24px)); transition: transform .6s cubic-bezier(.25,.8,.25,1); border-top: 6px solid var(--c, var(--accent)); }
   #drawer.open { transform: none; }
+  #drawer { background: #fffdf8; }
   #drawer.min .body { display: none; }
+  @media (max-width: 760px) { #drawer.min #d-title::after { content: '  · tap to read'; font-size: 12px; font-weight: 500; color: var(--ink-3); } }
   #drawer.min header { cursor: pointer; }
   #drawer header { padding: 16px 18px 10px; position: relative; }
   .x { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 9px; font-size: 20px; color: var(--ink-3); }
@@ -183,17 +184,86 @@
   #touch button { width: 60px; height: 60px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); font-size: 20px; touch-action: none; user-select: none; -webkit-user-select: none; }
   #touch button.on { background: var(--accent); color: #fff; }
   #touch button.locked { display: none; }
-  @media (pointer: coarse) { #touch { display: flex; } #help { display: none; } #speedo { bottom: 88px; } }
+  /* ---------- touch devices ---------- */
+  .touch #touch { display: flex; }
+  .touch #help, .touch .kbd-only, .touch #prompt kbd { display: none !important; }
+  .touch-only { display: none; }
+  .touch .touch-only { display: block; }
+  .touch #speedo { bottom: 140px; }
+  .touch #prompt { bottom: 236px; }
+  #touch .pad { display: grid; grid-template-columns: repeat(2, 60px); grid-template-areas: 'boost up' 'jump down'; gap: 8px; }
+  #touch [data-k="up"] { grid-area: up; } #touch [data-k="down"] { grid-area: down; }
+  #touch [data-k="boost"] { grid-area: boost; } #touch [data-k="jump"] { grid-area: jump; }
+  #touch button.locked { visibility: hidden; display: block; }
+
+  /* ---------- phones (portrait) ---------- */
   @media (max-width: 760px) {
     .map-wrap { grid-template-columns: 1fr; }
-    #drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; height: 46vh; transform: translateY(calc(100% + 24px)); }
+    #hud { top: 8px; left: 8px; width: min(220px, calc(100vw - 136px)); padding: 9px 11px; }
+    .lvl { font-size: 13px; }
+    .lvl > span:last-child { font-size: 11px; }
+    .bar { height: 5px; margin-top: 6px; }
+    .flags { gap: 4px; margin-top: 8px; }
+    .flags b { width: 16px; height: 16px; border-width: 2px; border-radius: 5px; font-size: 9px; }
+    .flags span { font-size: 11px; }
+    #goal { font-size: 11.5px; margin-top: 7px; padding-top: 7px; }
+    #side { top: 8px; right: 8px; gap: 6px; }
+    #minimap { width: 92px; height: 92px; }
+    .btns { flex-wrap: wrap; justify-content: flex-end; width: 116px; gap: 4px; }
+    .btn { padding: 5px 8px; font-size: 11px; border-radius: 8px; }
+    #speedo { right: 8px; padding: 6px 10px; min-width: 0; }
+    #speedo b { font-size: 24px; }
+    #toasts { top: auto; bottom: 200px; width: 92vw; }
+    .toast { font-size: 13px; padding: 8px 12px; }
+    .toast.big { font-size: 14px; padding: 10px 14px; }
+    #drawer { top: auto; left: 8px; right: 8px; width: auto; bottom: 8px; max-height: 46dvh; transform: translateY(calc(100% + 24px)); }
+    .touch #drawer { bottom: 148px; max-height: calc(100dvh - 300px); }
     #drawer.open { transform: none; }
-    #hud { width: 210px; padding: 10px 12px; }
-    #minimap { width: 96px; height: 96px; }
+    #drawer header { padding: 12px 14px 8px; }
+    #drawer h2 { font-size: 18px; margin-right: 100px; }
+    #drawer .body { padding: 2px 14px 14px; }
+    #drawer.min .meta { display: none; }
+    #prompt { bottom: 150px; max-width: 92vw; padding: 9px 12px; gap: 9px; }
+    .drawer-up #prompt, .touch.drawer-up #prompt { bottom: auto; top: 150px; }
+    .touch #speedo { left: 10px; right: auto; bottom: 82px; text-align: left; }
+    #prompt b { font-size: 14px; }
+    #prompt small { font-size: 11px; }
+    .overlay { padding: 8px; }
+    .modal { padding: 18px 16px; max-height: calc(100dvh - 16px); }
+    .modal h2 { font-size: 20px; }
+    #intro h1 { font-size: 34px; }
     .keys { grid-template-columns: auto 1fr; }
-    #intro h1 { font-size: 38px; }
-    .flags b { width: 18px; height: 18px; }
     .grid2 { grid-template-columns: 1fr; }
+    .stats3 b { font-size: 18px; }
+    table.lb { font-size: 12.5px; }
+    table.lb th:nth-child(5), table.lb td:nth-child(5) { display: none; }
+    .pin { font-size: 11px; padding: 4px 9px 4px 6px; }
+    .pin i { width: 9px; height: 9px; }
+    #touch { padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); }
+    #touch button { width: 58px; height: 58px; font-size: 18px; border-radius: 14px; }
+    #touch .pad { grid-template-columns: repeat(2, 58px); }
+  }
+
+  /* ---------- phones (landscape) ---------- */
+  @media (max-height: 500px) and (orientation: landscape) {
+    #hud { top: 6px; left: 6px; width: 210px; padding: 7px 10px; }
+    #goal { display: none; }
+    #side { top: 6px; right: 6px; gap: 4px; }
+    #minimap { width: 72px; height: 72px; }
+    .btns { width: auto; flex-wrap: nowrap; }
+    .btn { padding: 4px 7px; font-size: 10.5px; }
+    #drawer { top: 104px; bottom: 8px; left: auto; right: 6px; width: min(44vw, 380px); max-height: none; transform: translateX(calc(100% + 24px)); }
+    .touch #drawer { bottom: 8px; right: 150px; max-height: none; }
+    #drawer.open { transform: none; }
+    #touch { padding: 6px 10px; }
+    #touch button { width: 46px; height: 46px; font-size: 16px; }
+    #touch .pad { grid-template-columns: repeat(2, 46px); gap: 6px; }
+    .touch #speedo { bottom: 6px; left: 124px; right: auto; text-align: left; }
+    .touch #prompt { bottom: 12px; }
+    #speedo b { font-size: 20px; }
+    #prompt { bottom: 12px; }
+    #toasts { top: 6px; bottom: auto; }
+    .modal { max-height: calc(100dvh - 12px); }
   }
 </style>
 <script type="importmap">
@@ -231,8 +301,8 @@
 <aside id="drawer" class="card"><header><button class="x" id="drawer-big" aria-label="Read in front" title="Read in front (Enter)" style="right:84px">⤢</button><button class="x" id="drawer-min" aria-label="Collapse" title="Collapse" style="right:48px">–</button><button class="x" id="drawer-x" aria-label="Close">×</button><div class="kicker" id="d-kicker"></div><h2 id="d-title"></h2><div class="meta" id="d-meta"></div></header><div class="body" id="d-body"></div></aside>
 
 <div id="touch">
-  <div><button data-k="left">◀</button><button data-k="right">▶</button></div>
-  <div><button data-k="jump" class="locked">⤒</button><button data-k="boost" class="locked">⚡</button><button data-k="down">▼</button><button data-k="up">▲</button></div>
+  <div><button data-k="left" aria-label="Steer left">◀</button><button data-k="right" aria-label="Steer right">▶</button></div>
+  <div class="pad"><button data-k="jump" class="locked" aria-label="Jump">⤒</button><button data-k="boost" class="locked" aria-label="Boost">⚡</button><button data-k="down" aria-label="Brake / reverse">▼</button><button data-k="up" aria-label="Accelerate">▲</button></div>
 </div>
 
 <div class="overlay open" id="intro">
@@ -240,7 +310,8 @@
     <div class="kicker">Portfolio · capture the flag</div>
     <h1>d4mr0 <span>CTF</span> Island</h1>
     <p style="margin-top:12px">Hi, I'm <b>Daksh Khurana</b>, an AI researcher and security engineer. Explore the island to learn about my work. Each area holds a flag; capture all six to reveal the secret <b>root</b> flag.</p>
-    <div class="keys" style="margin-top:16px">
+    <p class="touch-only" style="margin-top:14px;font-size:14px">Drive with the on-screen buttons. Drag to look around, pinch to zoom, and tap signs to read them.</p>
+    <div class="keys kbd-only" style="margin-top:16px">
       <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>drive</span><span><kbd>M</kbd></span><span>map &amp; fast travel</span>
       <span><kbd>B</kbd></span><span>brake</span><span><kbd>R</kbd></span><span>respawn if stuck</span>
     </div>
@@ -250,7 +321,7 @@
   </div>
 </div>
 
-<div class="overlay" id="map"><div class="modal card" style="--c:#14b8a6"><button class="x" data-close>×</button><div class="kicker">Island map</div><h2>Where to?</h2><p class="meta">Click a place to travel there instantly.</p>
+<div class="overlay" id="map"><div class="modal card" style="--c:#14b8a6"><button class="x" data-close>×</button><div class="kicker">Island map</div><h2>Where to?</h2><p class="meta">Choose a place to travel there instantly.</p>
   <div class="map-wrap" style="margin-top:14px"><canvas id="bigmap" width="900" height="900"></canvas><div class="places" id="places"></div></div></div></div>
 <div class="overlay" id="reader"><div class="modal card" id="reader-body" style="max-width:760px"></div></div>
 <div class="overlay" id="sheet"><div class="modal card" id="sheet-body" style="--c:#8b5cf6"></div></div>
@@ -504,9 +575,13 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
    RENDERER & SCENE
    ===================================================================== */
 const $ = id => document.getElementById(id);
+// Touch & low-power detection (add ?touch to the URL to preview the phone layout on a desktop)
+const TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || /[?&]touch\b/.test(location.search);
+const LOW = TOUCH || Math.min(innerWidth, innerHeight) < 600;
+document.documentElement.classList.toggle('touch', TOUCH);
 const canvas = $('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.setPixelRatio(Math.min(devicePixelRatio, LOW ? 1.25 : 1.5));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -531,7 +606,7 @@ scene.add(new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), skyMat));
 const hemi = new THREE.HemisphereLight(0xfff4e0, 0x6a8f5a, DAY.hemi); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff0d8, DAY.sun);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(LOW ? 1024 : 2048, LOW ? 1024 : 2048);
 Object.assign(sun.shadow.camera, { left: -55, right: 55, top: 55, bottom: -55, near: 1, far: 170 });
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun, sun.target);
@@ -975,7 +1050,7 @@ let bulbMat;
 {
   const leafy = [], pines = [], bushes = [], rocks = [];
   let guard = 0;
-  while (leafy.length + pines.length < 185 && guard++ < 9000) {
+  while (leafy.length + pines.length < (LOW ? 130 : 185) && guard++ < 9000) {
     const t = rand() * Math.PI * 2, r = 8 + Math.sqrt(rand()) * 95, x = r * Math.cos(t), z = r * Math.sin(t);
     if (!clear(x, z, 4)) continue;
     // pines gather toward the rugged north & west, leafy trees elsewhere
@@ -1271,13 +1346,24 @@ canvas.addEventListener('pointermove', e => {
   if (c) { tip.textContent = c.label; tip.style.left = e.clientX + 'px'; tip.style.top = e.clientY + 'px'; tip.classList.add('show'); } else tip.classList.remove('show');
 });
 canvas.addEventListener('pointerleave', () => $('tip').classList.remove('show'));
-canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; downAt = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); });
+const touches = new Map(); let pinch = null;
+const pinchDist = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+canvas.addEventListener('pointerdown', e => {
+  touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (touches.size === 2) { pinch = { d: pinchDist(), base: cam.dist }; drag = null; downAt = null; return; }
+  drag = { x: e.clientX, y: e.clientY }; downAt = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId);
+});
 canvas.addEventListener('pointermove', e => {
+  if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && touches.size === 2) { cam.dist = THREE.MathUtils.clamp(pinch.base * pinch.d / Math.max(pinchDist(), 1), 10, 60); cam.lastDrag = clock.elapsedTime; return; }
   if (!drag) return;
   cam.yaw -= (e.clientX - drag.x) * 0.006; cam.pitch = THREE.MathUtils.clamp(cam.pitch + (e.clientY - drag.y) * 0.004, 0.35, 1.35);
   drag = { x: e.clientX, y: e.clientY }; cam.lastDrag = clock.elapsedTime;
 });
+const endTouch = e => { touches.delete(e.pointerId); if (touches.size < 2) pinch = null; };
+canvas.addEventListener('pointercancel', e => { endTouch(e); drag = null; downAt = null; });
 canvas.addEventListener('pointerup', e => {
+  endTouch(e);
   drag = null;
   if (started && downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) pick(e)?.act();
   downAt = null;
@@ -1309,13 +1395,15 @@ function openModal(id) { clearKeys(); ({ map: buildMap, sheet: buildSheet, board
 
 // Drawer shows the area you're in; driving continues underneath
 let drawerFor = null, drawerDismissed = null;
-function openDrawer(key, { kicker, head, meta, body, color, challenge, flagId }) {
+function openDrawer(key, { kicker, head, meta, body, color, challenge, flagId }, auto = false) {
   drawerFor = key;
   const d = $('drawer'); d.style.setProperty('--c', color);
   $('d-kicker').textContent = kicker; $('d-title').textContent = head; $('d-meta').textContent = meta;
   const got = flagId === 'root' ? state.root : flagId && state.flags.includes(flagId);
   $('d-body').innerHTML = body() + (challenge ? `<div class="challenge"><b>${got ? '🚩 FLAG CAPTURED ✓' : `🚩 FLAG CHALLENGE · +${flagId === 'root' ? PTS.root : PTS.flag}`}</b>${challenge}</div>` : '');
-  $('d-body').scrollTop = 0; d.classList.add('open'); d.classList.remove('min'); $('drawer-min').textContent = '–';
+  // on phones, panels that open by themselves start collapsed so the road stays visible
+  const collapse = auto && innerWidth <= 760;
+  $('d-body').scrollTop = 0; d.classList.add('open'); d.classList.toggle('min', collapse); $('drawer-min').textContent = collapse ? '+' : '–';
 }
 function closeDrawer() { if (drawerFor) drawerDismissed = drawerFor; $('drawer').classList.remove('open'); drawerFor = null; }
 $('drawer-x').onclick = closeDrawer;
@@ -1333,8 +1421,8 @@ $('drawer-big').onclick = e => { e.stopPropagation(); openReader(); };
 const toggleMin = () => { const d = $('drawer'); d.classList.toggle('min'); $('drawer-min').textContent = d.classList.contains('min') ? '+' : '–'; };
 $('drawer-min').onclick = e => { e.stopPropagation(); toggleMin(); };
 document.querySelector('#drawer header').addEventListener('click', e => { if ($('drawer').classList.contains('min') && !e.target.closest('button')) toggleMin(); });
-const areaDrawer = a => openDrawer(a.id, { kicker: a.kicker, head: a.head, meta: a.meta, body: a.body, color: a.color, challenge: a.challenge, flagId: a.id });
-const jobDrawer = j => openDrawer('job:' + j.id, { kicker: j.date, head: j.role, meta: j.org, body: j.body, color: j.color });
+const areaDrawer = (a, auto) => openDrawer(a.id, { kicker: a.kicker, head: a.head, meta: a.meta, body: a.body, color: a.color, challenge: a.challenge, flagId: a.id }, auto);
+const jobDrawer = (j, auto) => openDrawer('job:' + j.id, { kicker: j.date, head: j.role, meta: j.org, body: j.body, color: j.color }, auto);
 
 // One entry point for progress: points, level-ups, unlocks, score sync
 function progress(change, msg, color) {
@@ -1609,7 +1697,7 @@ function showPrompt() {
   el.style.setProperty('--c', f.color);
   $('prompt-ico').textContent = focus ? '↩' : '🔍';
   $('prompt-t').textContent = focus ? 'Back to ride' : `Zoom in · ${f.label}`;
-  $('prompt-s').textContent = focus ? 'W / Esc to ride · Enter to read in front' : 'E zoom · Enter read in front';
+  $('prompt-s').textContent = TOUCH ? (focus ? 'Tap to return to the ride' : 'Tap to zoom in') : focus ? 'W / Esc to ride · Enter to read in front' : 'E zoom · Enter read in front';
 }
 $('prompt').onclick = () => focus ? exitFocus() : nearFocus && enterFocus(nearFocus);
 let candidate = null, candidateSince = 0;
@@ -1641,7 +1729,7 @@ function stepWorld(t) {
     if (Math.abs(px) < ROAD_W / 2 + 0.5 && ((prevZ > gz && pz <= gz) || (prevZ < gz && pz >= gz))) {
       const j = JOBS[i];
       if (!state.gates.includes(j.id)) { state.gates.push(j.id); save(); const n = JOBS.filter(x => state.gates.includes(x.id)).length; toast(`Gate ${n}/${JOBS.length} · <b>${j.role}</b>`, j.color); if (n === JOBS.length) toast('All gates passed. Career flag unlocked.', '#f59e0b'); }
-      jobDrawer(j);
+      jobDrawer(j, true);
     }
   });
   prevZ = pz;
@@ -1652,7 +1740,7 @@ function stepWorld(t) {
   if ((here?.id || null) !== inArea) {
     inArea = here?.id || null;
     clearTimeout(leaveT);
-    if (here) { car.lastArea = here.id; if (drawerFor !== here.id && drawerDismissed !== here.id && !(here.id === 'career' && drawerFor?.startsWith('job:'))) areaDrawer(here); }
+    if (here) { car.lastArea = here.id; if (drawerFor !== here.id && drawerDismissed !== here.id && !(here.id === 'career' && drawerFor?.startsWith('job:'))) areaDrawer(here, true); }
     else leaveT = setTimeout(() => { if (!inArea) { if (drawerFor) { $('drawer').classList.remove('open'); drawerFor = null; } drawerDismissed = null; } }, 1200);
   }
 
@@ -1705,6 +1793,7 @@ function stepCamera(dt, t) {
 }
 function stepView(dt) {
   const d = $('drawer'), covered = d.classList.contains('open') && !d.classList.contains('min');
+  document.documentElement.classList.toggle('drawer-up', covered);
   const mobile = innerWidth <= 760;
   const tx = covered && !mobile ? 203 : 0, ty = covered && mobile ? innerHeight * 0.2 : 0;
   const kv = 1 - Math.exp(-dt * 2.2);   // slow, gentle slide
