@@ -312,23 +312,8 @@ const rows = a => `<div class="rows">${a.map(([l, r]) => `<div><span>${l}</span>
 const badge = (t, c) => `<span class="badge" style="--b:${c}">${t}</span>`;
 const item = (t, right, p = '', extra = '') => `<div class="item"><div class="item-top"><b>${t}</b>${right}</div>${p ? `<p>${p}</p>` : ''}${extra}</div>`;
 
-// Career Road gates, oldest first (south → north)
+// Career Road gates, newest first (south → north)
 const JOBS = [
-  { id: 'bugcrowd', date: 'Mar 2022 — Aug 2025', role: 'Security Researcher', org: 'Bugcrowd · Remote · Freelance', color: '#f97316', line: 'Bug bounty hunting · 40+ Halls of Fame',
-    body: () => `<p>Independent bug bounty research on public and private programs.</p>
-      ${ul(['Found and responsibly disclosed vulnerabilities in production web applications and APIs.',
-            'Wrote clear reproduction steps and impact reports that teams could act on quickly.',
-            'Recognized in the Security Hall of Fame of 40+ organizations, including Dell, Pinterest and EC-Council.'])}` },
-  { id: 'vtf', date: 'Nov 2023 — Jan 2024', role: 'Cloud Security Intern', org: 'Virtually Testing Foundation · California', color: '#0ea5e9', line: 'AWS & Azure threat detection',
-    body: () => `<p>Cloud security internship focused on detection, monitoring and misconfiguration review.</p>
-      ${ul(['Assessed AWS and Azure environments using CloudTrail, CloudWatch, Cognito, Azure AD and Microsoft Sentinel.',
-            'Identified misconfigurations and supported remediation and ongoing monitoring.'])}` },
-  { id: 'bright', date: 'Jul 2024 — Aug 2025', role: 'Penetration Tester', org: 'Bright Security · San Rafael, CA · Full-time', color: '#ef4444', line: 'VAPT on LLMs, web, mobile & cloud',
-    body: () => `<p>End-to-end offensive security testing at an application security company.</p>
-      ${ul(['Performed VAPT on LLM features and on web, mobile, cloud, thick-client and internal applications.',
-            'Mapped AWS infrastructure and delivered recommendations that strengthened cloud security posture.',
-            'Partnered with engineering teams from finding to fix, and contributed to internal research tooling.',
-            'Presented findings to technical and business stakeholders and supported client onboarding.'])}` },
   { id: 'fdu', date: 'Sep 2025 — Present', role: 'Research & Teaching', org: 'Fairleigh Dickinson University · Teaneck, NJ · 3 roles', color: '#8b5cf6', line: '2 research roles + Teaching Assistant',
     body: () => {
       const role = (color, title, org, when, points) => `<div class="role" style="--rc:${color}"><div class="rt"><b>${title}</b><span>${when}</span></div><div class="ro">${org}</div>${ul(points)}</div>`;
@@ -343,6 +328,21 @@ const JOBS = [
         'Evaluate coursework for Database Systems (CSCI 3268/6623), Advanced Database Systems (CSCI 3351/7781) and Firewall & IDS (CSCI 3345/6873).',
         'Earlier term (Jan — Mar 2026): graded CSCI 3410, INFO 4410 and CSCI 6738 (Cybersecurity).'])}
       <p style="margin-top:12px;font-size:13px">Research details are in the <b>Research Lab</b>; papers are in <b>The Library</b>.</p>`; } },
+  { id: 'bright', date: 'Jul 2024 — Aug 2025', role: 'Penetration Tester', org: 'Bright Security · San Rafael, CA · Full-time', color: '#ef4444', line: 'VAPT on LLMs, web, mobile & cloud',
+    body: () => `<p>End-to-end offensive security testing at an application security company.</p>
+      ${ul(['Performed VAPT on LLM features and on web, mobile, cloud, thick-client and internal applications.',
+            'Mapped AWS infrastructure and delivered recommendations that strengthened cloud security posture.',
+            'Partnered with engineering teams from finding to fix, and contributed to internal research tooling.',
+            'Presented findings to technical and business stakeholders and supported client onboarding.'])}` },
+  { id: 'vtf', date: 'Nov 2023 — Jan 2024', role: 'Cloud Security Intern', org: 'Virtually Testing Foundation · California', color: '#0ea5e9', line: 'AWS & Azure threat detection',
+    body: () => `<p>Cloud security internship focused on detection, monitoring and misconfiguration review.</p>
+      ${ul(['Assessed AWS and Azure environments using CloudTrail, CloudWatch, Cognito, Azure AD and Microsoft Sentinel.',
+            'Identified misconfigurations and supported remediation and ongoing monitoring.'])}` },
+  { id: 'bugcrowd', date: 'Mar 2022 — Aug 2025', role: 'Security Researcher', org: 'Bugcrowd · Remote · Freelance', color: '#f97316', line: 'Bug bounty hunting · 40+ Halls of Fame',
+    body: () => `<p>Independent bug bounty research on public and private programs.</p>
+      ${ul(['Found and responsibly disclosed vulnerabilities in production web applications and APIs.',
+            'Wrote clear reproduction steps and impact reports that teams could act on quickly.',
+            'Recognized in the Security Hall of Fame of 40+ organizations, including Dell, Pinterest and EC-Council.'])}` },
 ];
 const RESEARCH = [
   ['Aerial threat detection', 'PAPER IN PROGRESS', '#0ea5e9', 'Deep-learning video segmentation for detecting aerial threats.'],
@@ -411,7 +411,7 @@ const AREAS = [
     body: () => `<p>Six disciplines, one branch each. Capturing flags levels them up, and the orbs on the tree glow brighter as they grow.</p>${skillBars()}` },
   { id: 'career', name: 'Career Road', color: '#f59e0b', c: [0, -58], r: 0, flag: [0, -100], skills: { off: 3, cloud: 2, hw: 1, ai: 2, dev: 1, data: 1 },
     challenge: `Drive through all ${JOBS.length} career gates, then take the flag at the end of the road.`,
-    kicker: 'Experience', head: 'Career Road', meta: `${JOBS.length} roles, oldest first. Drive north through each gate.`,
+    kicker: 'Experience', head: 'Career Road', meta: `${JOBS.length} roles, newest first. Drive north through each gate.`,
     body: () => rows(JOBS.map(j => [`<b>${j.role}</b> · ${j.org.split(' · ')[0]}`, j.date.split(' — ')[0]])) },
   { id: 'research', name: 'Research Lab', color: '#8b5cf6', c: [52, -50], r: 22, labelAbove: true, flag: [52, -50], skills: { ai: 6, data: 3 },
     challenge: 'A drone is circling the lab. Catch it, then touch the flag on the landing pad.',
@@ -678,7 +678,7 @@ roadHint(0, -9, 0, -60, 'Signs and books are clickable', '#ff6b35');
 roadHint(72, -18.4, 86, -22, 'Click a book to open it', '#0891b2');
 
 // Spawn: welcome board
-board(-8, -17, [0, 6], { kicker: 'Welcome · d4mr0', title: 'Daksh Khurana', sub: 'AI research · security · software', line: 'Explore freely · press M for the map', color: '#ff6b35', click: ['About me ↗', () => areaDrawer(AREA.spawn)] }, 9, 4.6);
+// (welcome sign removed: the welcome panel greets visitors and the newest job board takes this spot)
 
 
 // Career Road: 5 gates with boards
@@ -690,7 +690,7 @@ JOBS.forEach((j, i) => {
   arch.add(mesh(new THREE.BoxGeometry(ROAD_W + 1.6, 0.7, 0.7), M(col), 0, 5.1, 0));
   add(arch);
   // sides chosen so boards stay clear of the Skill Tree (right of gate 2) and the loop road (top)
-  const side = [1, -1, 1, -1][i], bz = z + [2, -2, -2, 3][i];
+  const side = [-1, 1, -1, 1][i], bz = z + [-2, -2, -2, 3][i];   // newest job front-left; Skill Tree stays visible on the right
   board(side * 10.5, bz, [0, bz + 30], { kicker: j.date, title: j.role, sub: j.org.split(' · ')[0], line: j.line, color: j.color, click: [`${j.role} · details`, () => jobDrawer(j)] });
 });
 
