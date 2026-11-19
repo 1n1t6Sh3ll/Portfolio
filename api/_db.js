@@ -74,3 +74,4 @@ function fileStore(cmds) {
   if (dirty) persist();
   return out;
 }
+

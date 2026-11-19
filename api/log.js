@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (!key) return send(res, 503, { error: 'Set the ADMIN_KEY environment variable to enable the log' });
   if (q.get('key') !== key) return send(res, 401, { error: 'wrong key' });
   try {
-    const limit = Math.min(5000, Math.max(1, +q.get('limit') || 500));
+    const limit = Math.min(100000, Math.max(1, +q.get('limit') || 500));
     const [rows, visits, visitors, players] = await pipe([
       ['LRANGE', 'l:log', '0', String(limit - 1)],
       ['GET', 'c:visits'], ['PFCOUNT', 'pf:visitors'], ['ZCARD', 'z:lb'],

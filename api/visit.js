@@ -15,7 +15,7 @@ export default async function handler(req, res) {
         ['LPUSH', 'l:log', JSON.stringify(entry)],
         ['INCR', 'c:visits'],
         ['PFCOUNT', 'pf:visitors'],
-        ['LTRIM', 'l:log', '0', '4999'],
+        ['LTRIM', 'l:log', '0', '99999'],
       ]);
       return send(res, 200, { visits, visitors });
     }

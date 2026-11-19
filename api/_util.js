@@ -34,7 +34,7 @@ export const query = req => new URL(req.url, 'http://local').searchParams;
 // Short, printable, length-capped string
 export const clean = (v, max = 40) => String(v ?? '').replace(/[^\w .,:/\-@#?=&%+]/g, '').slice(0, max);
 
-// Where a request came from. Uses Vercel's geo headers; never stores IP addresses.
+// Where a request came from: Vercel's geo headers plus the client IP (private log only).
 export function origin(req) {
   const h = req.headers;
   const dec = v => { try { return decodeURIComponent(v || ''); } catch { return v || ''; } };
@@ -43,7 +43,16 @@ export function origin(req) {
     country: clean(h['x-vercel-ip-country'], 4) || 'local',
     city: clean(dec(h['x-vercel-ip-city']), 40),
     device: /mobile|android|iphone|ipad/i.test(ua) ? 'mobile' : 'desktop',
+    ip: clientIp(req),
   };
+}
+
+// Visitor IP for the owner's private log (never sent to the public scoreboard). See privacy.html.
+export function clientIp(req) {
+  const h = req.headers;
+  const fwd = String(h['x-forwarded-for'] || '').split(',')[0].trim();
+  const ip = fwd || String(h['x-real-ip'] || '') || req.socket?.remoteAddress || '';
+  return clean(ip.replace(/^::ffff:/, ''), 45);
 }
 
 // Friendly, stable name for a player id, e.g. "Neon Falcon"

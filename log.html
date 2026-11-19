@@ -29,7 +29,7 @@
 <body>
 <main>
   <h1>~/<span>visitor-log</span></h1>
-  <p class="muted">Page views and leaderboard runs. No IP addresses are stored.</p>
+  <p class="muted">Page views and scoreboard runs. Private to you: includes visitor IP addresses, kept until you delete them. See <a href="privacy.html" style="color:#00ff41">privacy</a>.</p>
   <form id="f">
     <input id="key" type="password" placeholder="Admin key" autocomplete="current-password" required>
     <select id="filter"><option value="">All events</option><option value="visit">Visits</option><option value="score">Scores</option></select>
@@ -37,7 +37,7 @@
   </form>
   <div id="err"></div>
   <div class="stats" id="stats"></div>
-  <div class="wrap"><table><thead><tr><th>TIME</th><th>EVENT</th><th>PAGE / RIDER</th><th>LOCATION</th><th>DEVICE</th><th>VISITOR</th><th>FROM</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <div class="wrap"><table><thead><tr><th>TIME</th><th>EVENT</th><th>PAGE / PLAYER</th><th>LOCATION</th><th>IP</th><th>DEVICE</th><th>VISITOR</th><th>FROM</th></tr></thead><tbody id="rows"></tbody></table></div>
 </main>
 <script>
   // Where the scoreboard/visitor API lives. On Vercel (or locally) it's same-origin; anywhere else (GitHub Pages) it's the Vercel deployment.
@@ -61,7 +61,7 @@
         td(e.type.toUpperCase(), e.type),
         td(e.type === 'score' ? `${e.name} · LV${e.level} · ${e.points} pts · ${e.flags}/6 flags · ${e.coins} coins${e.root ? ' · ROOT' : ''}${e.clearSec ? ` · clear ${e.clearSec}s` : ''}` : e.page),
         flagTd(e.country, [e.city, e.country].filter(Boolean).join(', ')),
-        td(e.device), td(e.vid), td(e.ref || '—'),
+        td(e.ip || '—', 'mono'), td(e.device), td(e.vid), td(e.ref || '—'),
       );
       body.append(tr);
     });
@@ -73,7 +73,7 @@
     const key = $('key').value;
     try { sessionStorage.setItem('logkey', key); } catch (e) {}
     try {
-      const r = await fetch(`${API_BASE}/log?limit=2000&key=${encodeURIComponent(key)}`);
+      const r = await fetch(`${API_BASE}/log?limit=5000&key=${encodeURIComponent(key)}`);
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || r.status);
       data = d;

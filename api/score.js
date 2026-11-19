@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const rec = better ? { ...run, name, country, level: levelOf(run.points), at: Date.now(), first: prev?.first || Date.now() } : { ...prev, name, country };
     const score = String(rankScore(rec));
     const cmds = [['HSET', 'h:players', pid, JSON.stringify(rec)], ['ZADD', 'z:lb', score, pid], ['ZADD', weekKey(), score, pid]];
-    if (better) cmds.push(['LPUSH', 'l:log', JSON.stringify({ t: Date.now(), type: 'score', vid: pid.slice(0, 8), name, ...run, level: rec.level, ...origin(req) })], ['LTRIM', 'l:log', '0', '4999']);
+    if (better) cmds.push(['LPUSH', 'l:log', JSON.stringify({ t: Date.now(), type: 'score', vid: pid.slice(0, 8), name, ...run, level: rec.level, ...origin(req) })], ['LTRIM', 'l:log', '0', '99999']);
     cmds.push(['ZREVRANK', 'z:lb', pid]);
     const out = await pipe(cmds);
     return send(res, 200, { ok: true, rank: out.at(-1) + 1, record: rec });
