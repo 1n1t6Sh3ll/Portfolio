@@ -140,6 +140,8 @@
   table.lb td.n { font-family: 'JetBrains Mono', monospace; color: var(--ink-3); width: 30px; }
   table.lb tbody tr:first-child td.n { color: var(--gold); font-weight: 700; }
   table.lb tr.you td { background: rgba(255,107,53,.1); }
+  img.flag { width: 22px; height: 16px; border-radius: 3px; vertical-align: -3px; margin-right: 6px; box-shadow: 0 0 0 1px rgba(31,36,48,.12); object-fit: cover; }
+  .flag-unknown { margin-right: 6px; }
   .root-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; background: var(--ink); color: var(--gold); padding: 1px 5px; border-radius: 4px; margin-left: 6px; }
   .stats3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
   .stats3 div { background: rgba(31,36,48,.05); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: var(--ink-3); font-family: 'JetBrains Mono', monospace; }
@@ -568,7 +570,11 @@ const flagsHeld = () => state.flags.length;
 const points = () => state.flags.length * PTS.flag + state.coins.length * PTS.coin + (state.root ? PTS.root : 0);
 const level = () => LEVELS.filter(l => points() >= l.pts).length;
 const has = k => level() >= LEVELS.findIndex(l => l.key === k) + 1;
-const flagEmoji = cc => /^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '🌐';
+// Country flag from the visitor's IP country (set by Vercel). Images render everywhere, unlike flag emoji on Windows.
+const countryName = (() => { try { const dn = new Intl.DisplayNames(['en'], { type: 'region' }); return cc => dn.of(cc); } catch (e) { return cc => cc; } })();
+const flagEmoji = cc => /^[A-Z]{2}$/.test(cc || '')
+  ? `<img class="flag" src="https://flagcdn.com/w40/${cc.toLowerCase()}.png" srcset="https://flagcdn.com/w80/${cc.toLowerCase()}.png 2x" width="22" height="16" alt="${cc}" title="${countryName(cc)}" loading="lazy" onerror="this.replaceWith(document.createTextNode('${cc}'))">`
+  : '<span class="flag-unknown" title="Unknown location">🌐</span>';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /* =====================================================================

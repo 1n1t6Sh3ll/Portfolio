@@ -46,6 +46,9 @@
   const $ = id => document.getElementById(id);
   try { $('key').value = sessionStorage.getItem('logkey') || ''; } catch (e) {}
   let data = null;
+  const flagTd = (cc, text) => { const c = document.createElement('td');
+    if (/^[A-Z]{2}$/.test(cc || '')) { const i = document.createElement('img'); i.src = `https://flagcdn.com/w40/${cc.toLowerCase()}.png`; i.width = 20; i.height = 14; i.alt = cc; i.style.cssText = 'vertical-align:-2px;margin-right:6px;border-radius:2px'; c.append(i); }
+    c.append(text || '—'); return c; };
   const td = (text, cls) => { const c = document.createElement('td'); c.textContent = text ?? ''; if (cls) c.className = cls; return c; };
 
   function render() {
@@ -57,7 +60,7 @@
         td(new Date(e.t).toLocaleString()),
         td(e.type.toUpperCase(), e.type),
         td(e.type === 'score' ? `${e.name} · LV${e.level} · ${e.points} pts · ${e.flags}/6 flags · ${e.coins} coins${e.root ? ' · ROOT' : ''}${e.clearSec ? ` · clear ${e.clearSec}s` : ''}` : e.page),
-        td([e.city, e.country].filter(Boolean).join(', ')),
+        flagTd(e.country, [e.city, e.country].filter(Boolean).join(', ')),
         td(e.device), td(e.vid), td(e.ref || '—'),
       );
       body.append(tr);
