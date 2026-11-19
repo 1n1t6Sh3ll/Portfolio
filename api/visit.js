@@ -1,9 +1,10 @@
 // POST /api/visit { vid, page, ref } -> counts a page view, returns totals
 // GET  /api/visit                    -> totals only
 import { pipe } from './_db.js';
-import { readJson, send, clean, origin } from './_util.js';
+import { readJson, send, clean, origin, cors } from './_util.js';
 
 export default async function handler(req, res) {
+  if (cors(req, res)) return;
   try {
     if (req.method === 'POST') {
       const b = await readJson(req);

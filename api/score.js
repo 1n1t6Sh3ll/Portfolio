@@ -1,10 +1,11 @@
 // POST /api/score { pid, points, flags, coins, root, clearSec } -> saves an explorer's best run.
 // Names are generated from the player id and the flag comes from the visitor's country; nothing typed by users is shown.
 import { pipe } from './_db.js';
-import { readJson, send, clean, origin, nameFor } from './_util.js';
+import { readJson, send, clean, origin, nameFor, cors } from './_util.js';
 import { PTS, TOTAL, MAX_PTS, levelOf, weekKey, rankScore } from './_game.js';
 
 export default async function handler(req, res) {
+  if (cors(req, res)) return;
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
   try {
     const b = await readJson(req);

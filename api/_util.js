@@ -7,6 +7,21 @@ export async function readJson(req) {
   return raw ? JSON.parse(raw) : {};
 }
 
+// Pages hosted elsewhere (GitHub Pages) may call this API. Extra origins: ALLOWED_ORIGINS="https://a.com,https://b.com"
+const ALLOWED = ['https://1n1t6sh3ll.github.io', ...(process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)];
+export function cors(req, res) {
+  const origin = req.headers.origin;
+  if (origin && (ALLOWED.includes(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+  if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return true; }   // preflight handled
+  return false;
+}
+
 export function send(res, status, data) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json');

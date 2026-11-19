@@ -961,14 +961,18 @@
         // Run rendering logic on page load
         window.onload = renderEvents;
 
-        // Visitor counter (served by /api on Vercel; silently skipped where there is no API)
+        // Visitor counter (served by the Vercel API; silently skipped if it can't be reached)
         (function () {
+            // Where the scoreboard/visitor API lives. On Vercel (or locally) it's same-origin; anywhere else (GitHub Pages) it's the Vercel deployment.
+            const VERCEL_URL = 'https://YOUR-PROJECT.vercel.app';   // ← set to your Vercel URL
+            const API_BASE = (location.origin === VERCEL_URL || location.hostname === 'localhost' || location.hostname.endsWith('.vercel.app')) ? '/api' : VERCEL_URL + '/api';
+
             let vid = 'anon';
             try {
                 vid = localStorage.getItem('d4mr0-vid') || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
                 localStorage.setItem('d4mr0-vid', vid);
             } catch (e) {}
-            fetch('/api/visit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vid, page: 'home', ref: document.referrer }) })
+            fetch(API_BASE + '/visit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vid, page: 'home', ref: document.referrer }) })
                 .then(r => r.ok ? r.json() : null)
                 .then(d => { if (d) document.getElementById('visitor-count').textContent = `// ${d.visitors} VISITORS`; })
                 .catch(() => {});

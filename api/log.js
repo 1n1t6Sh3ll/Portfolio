@@ -1,8 +1,9 @@
 // GET /api/log?key=ADMIN_KEY&limit=500 -> recent visit and score events (owner only)
 import { pipe } from './_db.js';
-import { send, query } from './_util.js';
+import { send, query, cors } from './_util.js';
 
 export default async function handler(req, res) {
+  if (cors(req, res)) return;
   const q = query(req);
   const key = process.env.ADMIN_KEY;
   if (!key) return send(res, 503, { error: 'Set the ADMIN_KEY environment variable to enable the log' });

@@ -1,9 +1,10 @@
 // GET /api/leaderboard?pid=... -> top 10 all-time + this week, visitor totals, and the caller's rank
 import { pipe } from './_db.js';
-import { send, query, clean } from './_util.js';
+import { send, query, clean, cors } from './_util.js';
 import { weekKey } from './_game.js';
 
 export default async function handler(req, res) {
+  if (cors(req, res)) return;
   try {
     const pid = clean(query(req).get('pid'), 64);
     const [top, week, players, visits, visitors, rank] = await pipe([
