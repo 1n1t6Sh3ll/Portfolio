@@ -964,7 +964,7 @@
         // Visitor counter (served by the Vercel API; silently skipped if it can't be reached)
         (function () {
             // Where the scoreboard/visitor API lives. On Vercel (or locally) it's same-origin; anywhere else (GitHub Pages) it's the Vercel deployment.
-            const VERCEL_URL = 'https://YOUR-PROJECT.vercel.app';   // ← set to your Vercel URL
+            const VERCEL_URL = 'https://portfolio1-neon-beta-87.vercel.app';   // ← set to your Vercel URL
             const API_BASE = (location.origin === VERCEL_URL || location.hostname === 'localhost' || location.hostname.endsWith('.vercel.app')) ? '/api' : VERCEL_URL + '/api';
 
             let vid = 'anon';
