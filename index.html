@@ -1311,6 +1311,7 @@ addEventListener('keydown', e => {
   if (started && toggles[e.code]) { const id = toggles[e.code], was = $(id).classList.contains('open'); closeModals(); if (!was) openModal(id); return; }
   if (!started || modalOpen()) return;
   if (KEYMAP[e.code]) { keys[KEYMAP[e.code]] = 1; e.preventDefault(); }
+  if (e.code === 'Space' && !e.repeat && !has('jump')) once('jump-lock', `Jump unlocks at <b>level 3</b> (${LEVELS[2].pts} pts). Capture flags and coins to level up.`);
   if (e.repeat) return;
   if (e.code === 'KeyR') respawn();
   if (e.code === 'KeyH') honk();
@@ -1560,6 +1561,7 @@ async function buildBoard() {
 }
 
 document.addEventListener('click', e => {
+  if (e.target.closest('button') && e.detail > 0) setTimeout(() => document.activeElement?.blur?.(), 0);   // mouse clicks don't leave focus behind
   if (e.target.closest('[data-close]')) return closeModals();
   const g = e.target.closest('[data-go]'); if (g) return travel(g.dataset.go);
   const o = e.target.closest('[data-open]'); if (o) return openModal(o.dataset.open);
