@@ -690,8 +690,9 @@ JOBS.forEach((j, i) => {
   arch.add(mesh(new THREE.BoxGeometry(ROAD_W + 1.6, 0.7, 0.7), M(col), 0, 5.1, 0));
   add(arch);
   // sides chosen so boards stay clear of the Skill Tree (right of gate 2) and the loop road (top)
-  const side = [-1, 1, -1, 1][i], bz = z + [-2, -2, -2, 3][i];   // newest job front-left; Skill Tree stays visible on the right
-  board(side * 10.5, bz, [0, bz + 30], { kicker: j.date, title: j.role, sub: j.org.split(' · ')[0], line: j.line, color: j.color, click: [`${j.role} · details`, () => jobDrawer(j)] });
+  // every career board on the left, angled toward the road: the right side belongs to the Skill Tree
+  const bz = z + (i === JOBS.length - 1 ? 3 : -2);
+  board(-11, bz, [0, bz + 14], { kicker: j.date, title: j.role, sub: j.org.split(' · ')[0], line: j.line, color: j.color, click: [`${j.role} · details`, () => jobDrawer(j)] });
 });
 
 // Research Lab: dome, antenna, dish, landing pad, drone
@@ -820,6 +821,8 @@ const skillOrbs = [];
     clickable(g, `🌳 ${sk.name} · ${sk.list.slice(0, 3).join(', ')}…`, () => areaDrawer(AREA.skills));
   });
   block(x, z, 1.8);
+  board(7.5, -20, [0, 10], { kicker: 'Skill Tree', title: 'Skills', sub: 'AI · software · data · security', line: 'Six disciplines that grow as you play', color: '#16a34a',
+    click: ['All skills', () => areaDrawer(AREA.skills)] }, 6, 3.6);
   addFocus({ label: 'Skill Tree', sub: 'Six disciplines', color: '#16a34a', T: new THREE.Vector3(x, 6.5, z), C: new THREE.Vector3(x - 17, 7.5, z + 3), spot: [x - 10, z + 2], act: () => areaDrawer(AREA.skills) });
 }
 
