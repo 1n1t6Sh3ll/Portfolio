@@ -118,6 +118,12 @@
   .go { display: flex; flex-wrap: wrap; gap: 6px; }
   .go button { font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 99px; background: #fff; border: 2px solid var(--c); }
   .go button:hover { background: var(--c); color: #fff; }
+  .role { margin-top: 12px; padding: 12px 14px 12px 16px; border-radius: 12px; background: #fff; border: 1px solid var(--line); border-left: 5px solid var(--rc); }
+  .role .rt { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .role .rt b { font-size: 15.5px; line-height: 1.3; }
+  .role .rt span { flex: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #fff; background: var(--rc); padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
+  .role .ro { font-size: 13px; color: var(--ink-3); margin: 2px 0 8px; }
+  .role ul { margin-top: 0; }
   .challenge { margin-top: 16px; padding: 11px 13px; border-radius: 12px; background: rgba(31,36,48,.05); border-left: 4px solid var(--c); font-size: 13.5px; color: var(--ink); line-height: 1.5; }
   .challenge b { font-family: 'JetBrains Mono', monospace; font-size: 11px; display: block; color: var(--c); }
 
@@ -323,21 +329,20 @@ const JOBS = [
             'Mapped AWS infrastructure and delivered recommendations that strengthened cloud security posture.',
             'Partnered with engineering teams from finding to fix, and contributed to internal research tooling.',
             'Presented findings to technical and business stakeholders and supported client onboarding.'])}` },
-  { id: 'fdu', date: 'Sep 2025 — Present', role: 'Research & Teaching', org: 'Fairleigh Dickinson University · Teaneck, NJ · 3 roles', color: '#8b5cf6', line: 'DeepChain Lab · satellite AI · teaching',
-    body: () => `<p>Three part-time roles at FDU, held alongside my M.S.: two in research, one in teaching.</p>
-      <h3>Research Assistant (Volunteer) · DeepChain Lab</h3>
-      <p class="meta" style="margin:-4px 0 6px">Sep 2025 — Present</p>
-      ${ul(['Apply deep learning to video segmentation and object tracking, contributing to paper submissions.',
-            'Develop graph neural network (GNN) models for skin-cancer image classification.'])}
-      <h3>Research Assistant · Satellite AI</h3>
-      <p class="meta" style="margin:-4px 0 6px">Feb 2026 — Present · Hybrid</p>
-      ${ul(['Apply deep learning to satellite imagery to model ice formation over narrow water channels.',
-            'Design experiments and optimize models through algorithm development and geospatial analysis.'])}
-      <h3>Teaching Assistant</h3>
-      <p class="meta" style="margin:-4px 0 6px">Jan — Mar 2026 · Aug 2026 — Present · Hybrid</p>
-      ${ul(['Current: evaluate coursework for Database Systems (CSCI 3268/6623), Advanced Database Systems (CSCI 3351/7781) and Firewall & IDS (CSCI 3345/6873).',
-            'Spring 2026: graded CSCI 3410, INFO 4410 and CSCI 6738 (Cybersecurity).'])}
-      <p style="margin-top:10px;font-size:13px">Research details and papers are in the <b>Research Lab</b> and <b>The Library</b>.</p>` },
+  { id: 'fdu', date: 'Sep 2025 — Present', role: 'Research & Teaching', org: 'Fairleigh Dickinson University · Teaneck, NJ · 3 roles', color: '#8b5cf6', line: '2 research roles + Teaching Assistant',
+    body: () => {
+      const role = (color, title, org, when, points) => `<div class="role" style="--rc:${color}"><div class="rt"><b>${title}</b><span>${when}</span></div><div class="ro">${org}</div>${ul(points)}</div>`;
+      return `<p>Three part-time roles at FDU, held alongside my M.S.</p>
+      ${role('#8b5cf6', 'Research Assistant (Volunteer)', 'DeepChain Lab', 'SEP 2025 — NOW', [
+        'Apply deep learning to video segmentation and object tracking, contributing to paper submissions.',
+        'Develop graph neural network (GNN) models for skin-cancer image classification.'])}
+      ${role('#0891b2', 'Research Assistant', 'Satellite AI · Hybrid', 'FEB 2026 — NOW', [
+        'Apply deep learning to satellite imagery to model ice formation over narrow water channels.',
+        'Design experiments and optimize models through algorithm development and geospatial analysis.'])}
+      ${role('#16a34a', 'Teaching Assistant', 'Computer Science · Hybrid', 'AUG 2026 — NOW', [
+        'Evaluate coursework for Database Systems (CSCI 3268/6623), Advanced Database Systems (CSCI 3351/7781) and Firewall & IDS (CSCI 3345/6873).',
+        'Earlier term (Jan — Mar 2026): graded CSCI 3410, INFO 4410 and CSCI 6738 (Cybersecurity).'])}
+      <p style="margin-top:12px;font-size:13px">Research details are in the <b>Research Lab</b>; papers are in <b>The Library</b>.</p>`; } },
 ];
 const RESEARCH = [
   ['Aerial threat detection', 'PAPER IN PROGRESS', '#0ea5e9', 'Deep-learning video segmentation for detecting aerial threats.'],
