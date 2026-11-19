@@ -594,7 +594,7 @@ function groundAt(x, z) {
 const LOOP = [[0, -100], [30, -80], [52, -50], [72, -16], [64, 16], [46, 38], [HILL.x - HILL.r - 16, HILL.z], [0, 64], [-36, 62], [-64, 16], [-72, -16], [-52, -50], [-30, -80]];
 const SEGS = [];
 LOOP.forEach((p, i) => SEGS.push([p, LOOP[(i + 1) % LOOP.length]]));
-[[0, -26, 7, -30], [0, 0, 86, -22], [72, -16, 86, -22], [0, 0, 22, 20.5], [-36, 62, -50, 63], [0, -14, 0, -100], [0, 0, 52, -50], [0, 0, -52, -50], [0, 0, 64, 16], [0, 0, -64, 16], [0, 0, 0, PIER.z0 + 2]].forEach(([a, b, c, d]) => SEGS.push([[a, b], [c, d]]));
+[[0, 0, 11, -25], [0, 0, 86, -22], [72, -16, 86, -22], [0, 0, 22, 20.5], [-36, 62, -50, 63], [0, -14, 0, -100], [0, 0, 52, -50], [0, 0, -52, -50], [0, 0, 64, 16], [0, 0, -64, 16], [0, 0, 0, PIER.z0 + 2]].forEach(([a, b, c, d]) => SEGS.push([[a, b], [c, d]]));
 const ROAD_W = 7;
 {
   const roadM = M(0xfff1d6), edgeM = M(0xe8c99a);
@@ -670,7 +670,7 @@ function roadHint(x, z, tx, tz, text, color) {
 }
 roadHint(0, -9, 0, -60, 'Signs and books are clickable', '#ff6b35');
 // Road directions at the start: one painted label per road, pointing the way
-[['career', 0, -100, '▲ Career Road'], ['research', 52, -50, '▲ Research Lab'], ['library', 86, -22, '▲ The Library'], ['workshop', 64, 16, '▲ Workshop · Projects'],
+[['skills', 15, -34, '▲ Skill Tree'], ['career', 0, -100, '▲ Career Road'], ['research', 52, -50, '▲ Research Lab'], ['library', 86, -22, '▲ The Library'], ['workshop', 64, 16, '▲ Workshop · Projects'],
  ['community', 30, 28, '▲ Community Hub'], ['vault', -64, 16, '▲ Trophy Vault'], ['campus', -52, -50, '▲ Campus'], ['contact', 0, 98, '▲ About & Contact · CV']].forEach(([id, tx, tz, text]) => {
   const d = id === 'career' ? 19 : 17, l = Math.hypot(tx, tz);
   roadHint(tx / l * d, tz / l * d, tx, tz, text, AREA[id].color);
@@ -821,8 +821,8 @@ const skillOrbs = [];
     clickable(g, `🌳 ${sk.name} · ${sk.list.slice(0, 3).join(', ')}…`, () => areaDrawer(AREA.skills));
   });
   block(x, z, 1.8);
-  board(7.5, -20, [0, 10], { kicker: 'Skill Tree', title: 'Skills', sub: 'AI · software · data · security', line: 'Six disciplines that grow as you play', color: '#16a34a',
-    click: ['All skills', () => areaDrawer(AREA.skills)] }, 6, 3.6);
+  board(6.6, -27.5, [0, 0], { kicker: 'Skill Tree', title: 'Skills', sub: 'AI · software · data · security', line: 'Six disciplines that grow as you play', color: '#16a34a',
+    click: ['All skills', () => areaDrawer(AREA.skills)] }, 5, 3.2);
   addFocus({ label: 'Skill Tree', sub: 'Six disciplines', color: '#16a34a', T: new THREE.Vector3(x, 6.5, z), C: new THREE.Vector3(x - 17, 7.5, z + 3), spot: [x - 10, z + 2], act: () => areaDrawer(AREA.skills) });
 }
 
