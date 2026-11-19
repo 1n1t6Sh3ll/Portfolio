@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Visitor Log</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #050505; --line: rgba(255,255,255,.09); --green: #00ff41; --muted: #8a919c; --text: #e5e5e5; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 32px 16px; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 22px; color: #fff; margin-bottom: 4px; } h1 span { color: var(--green); }
+  .muted { color: var(--muted); font-size: 12px; }
+  form { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+  input, select, button { font: inherit; background: #0b0d11; color: #fff; border: 1px solid var(--line); padding: 8px 10px; }
+  button { cursor: pointer; } button:hover { border-color: var(--green); color: var(--green); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .stat { border: 1px solid var(--line); padding: 14px; } .stat b { display: block; font-size: 24px; color: #fff; }
+  .wrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 400; font-size: 11px; letter-spacing: .08em; position: sticky; top: 0; background: #08090c; }
+  td.score { color: #facc15; } td.visit { color: var(--green); }
+  #err { color: #ef4444; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>~/<span>visitor-log</span></h1>
+  <p class="muted">Page views and leaderboard runs. No IP addresses are stored.</p>
+  <form id="f">
+    <input id="key" type="password" placeholder="Admin key" autocomplete="current-password" required>
+    <select id="filter"><option value="">All events</option><option value="visit">Visits</option><option value="score">Scores</option></select>
+    <button>Load</button>
+  </form>
+  <div id="err"></div>
+  <div class="stats" id="stats"></div>
+  <div class="wrap"><table><thead><tr><th>TIME</th><th>EVENT</th><th>PAGE / RIDER</th><th>LOCATION</th><th>DEVICE</th><th>VISITOR</th><th>FROM</th></tr></thead><tbody id="rows"></tbody></table></div>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  try { $('key').value = sessionStorage.getItem('logkey') || ''; } catch (e) {}
+  let data = null;
+  const td = (text, cls) => { const c = document.createElement('td'); c.textContent = text ?? ''; if (cls) c.className = cls; return c; };
+
+  function render() {
+    const f = $('filter').value;
+    const body = $('rows'); body.replaceChildren();
+    data.entries.filter(e => !f || e.type === f).forEach(e => {
+      const tr = document.createElement('tr');
+      tr.append(
+        td(new Date(e.t).toLocaleString()),
+        td(e.type.toUpperCase(), e.type),
+        td(e.type === 'score' ? `${e.name} · LV${e.level} · ${e.points} pts · ${e.flags}/6 flags · ${e.coins} coins${e.root ? ' · ROOT' : ''}${e.clearSec ? ` · clear ${e.clearSec}s` : ''}` : e.page),
+        td([e.city, e.country].filter(Boolean).join(', ')),
+        td(e.device), td(e.vid), td(e.ref || '—'),
+      );
+      body.append(tr);
+    });
+  }
+
+  $('f').onsubmit = async ev => {
+    ev.preventDefault();
+    $('err').textContent = '';
+    const key = $('key').value;
+    try { sessionStorage.setItem('logkey', key); } catch (e) {}
+    try {
+      const r = await fetch(`/api/log?limit=2000&key=${encodeURIComponent(key)}`);
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || r.status);
+      data = d;
+      const today = new Date().toDateString();
+      const todayCount = d.entries.filter(e => e.type === 'visit' && new Date(e.t).toDateString() === today).length;
+      $('stats').innerHTML = '';
+      [['Unique visitors', d.visitors], ['Total page views', d.visits], ['Views today', todayCount], ['Riders on leaderboard', d.players]]
+        .forEach(([l, v]) => { const s = document.createElement('div'); s.className = 'stat'; s.innerHTML = `<b></b>${l}`; s.firstChild.textContent = v; $('stats').append(s); });
+      render();
+    } catch (e) { $('err').textContent = `Couldn't load log: ${e.message}`; }
+  };
+  $('filter').onchange = () => data && render();
+  if ($('key').value) $('f').requestSubmit();
+</script>
+</body>
+</html>

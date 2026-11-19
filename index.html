@@ -1,832 +1,1767 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daksh . | /root/portfolio</title>
-    <meta name="description" content="Personal portfolio of Daksh Khurana - Security Researcher & AI Engineer.">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Marked.js is no longer needed -->
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Daksh . | CTF Island</title>
+<meta name="description" content="Daksh Khurana's portfolio as a 3D capture-the-flag island. Drive, explore, capture flags and climb the scoreboard.">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1f2430;
+    --ink-2: #4b5263;
+    --ink-3: #8a91a1;
+    --card: rgba(255, 253, 248, 0.94);
+    --line: rgba(31, 36, 48, 0.12);
+    --accent: #ff6b35;
+    --ok: #16a34a;
+    --gold: #f5b301;
+    --shadow: 0 10px 30px rgba(31, 36, 48, 0.18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #bfe3ee; color: var(--ink); font-family: 'Space Grotesk', system-ui, sans-serif; }
+  canvas#scene { position: fixed; inset: 0; display: block; touch-action: none; }
+  #labels { position: fixed; inset: 0; pointer-events: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  a { color: inherit; }
+  kbd, .mono { font-family: 'JetBrains Mono', monospace; }
+  kbd { display: inline-block; min-width: 22px; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; background: #fff; font-size: 11px; text-align: center; color: var(--ink); }
 
-    <style>
-        :root {
-            --bg-color: #050505;
-            --terminal-green: #00ff41;
-            --terminal-dim: #008F11;
-            --alert: #ef4444;
-            --highlight: #facc15;
-            --text-base: #e5e5e5;
-        }
+  .pin { display: flex; align-items: center; gap: 7px; padding: 6px 12px 6px 8px; background: var(--card); border-radius: 999px; box-shadow: var(--shadow);
+         font-weight: 700; font-size: 14px; white-space: nowrap; transition: opacity .3s, transform .3s; }
+  .pin i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); flex: none; }
+  .pin small { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; color: var(--ok); }
+  .pin.far { opacity: 0; }
+  #prompt { position: fixed; left: 50%; bottom: 120px; z-index: 25; display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px 14px; text-align: left;
+            transform: translate(-50%, 20px) scale(.96); opacity: 0; pointer-events: none; transition: opacity .35s, transform .35s cubic-bezier(.2,.9,.3,1.2); border: 2px solid var(--c, var(--accent)); }
+  #prompt.show { opacity: 1; transform: translate(-50%, 0) scale(1); pointer-events: auto; }
+  #prompt #prompt-ico { font-size: 22px; }
+  #prompt b { display: block; font-size: 15px; }
+  #prompt small { display: block; font-size: 12px; color: var(--ink-3); }
+  #prompt kbd { font-size: 13px; padding: 3px 9px; }
+  #prompt:hover { background: #fff; }
+  @media (max-width: 760px) { #prompt { bottom: auto; top: 46%; } }
+  #tip { position: fixed; z-index: 30; pointer-events: none; padding: 6px 11px; border-radius: 10px; background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 600;
+         white-space: nowrap; transform: translate(14px, 14px); opacity: 0; transition: opacity .15s; }
+  #tip.show { opacity: 1; }
+  .pin.near { opacity: 0; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-base);
-            font-family: 'Space Grotesk', sans-serif;
-            overflow-x: hidden;
-        }
+  .card { background: var(--card); border-radius: 16px; box-shadow: var(--shadow); }
+  #hud { position: fixed; top: 16px; left: 16px; z-index: 10; width: 270px; padding: 14px 16px; }
+  .lvl { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; }
+  .lvl > span:last-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-3); font-weight: 600; }
+  .bar { height: 6px; background: rgba(31,36,48,.08); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--c, var(--accent)); border-radius: 99px; transition: width .5s; }
+  .flags { display: flex; gap: 6px; margin-top: 12px; align-items: center; }
+  .flags b { width: 22px; height: 22px; border-radius: 7px; border: 2px dashed var(--c); display: grid; place-items: center; font-size: 11px; color: #fff; }
+  .flags b.on { background: var(--c); border-style: solid; }
+  .flags span { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-2); }
+  #goal { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-2); display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  #goal i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+  #goal b { color: var(--ink); }
+  #side { position: fixed; top: 16px; right: 16px; z-index: 10; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  #minimap { width: 150px; height: 150px; border-radius: 50%; box-shadow: var(--shadow); cursor: pointer; display: block; background: #7cc8e0; }
+  .btns { display: flex; gap: 6px; }
+  .btn { background: var(--card); box-shadow: var(--shadow); border-radius: 10px; padding: 7px 11px; font-size: 12px; font-weight: 600; text-decoration: none; color: var(--ink); }
+  .btn:hover { background: #fff; color: var(--accent); }
+  #speedo { position: fixed; right: 16px; bottom: 16px; z-index: 10; padding: 10px 16px; text-align: right; min-width: 120px; }
+  #speedo b { font-size: 34px; line-height: 1; display: block; }
+  #speedo small { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-3); }
+  #boostbar { display: none; }
+  #help { transition: opacity 1s; }
+  #help.gone { opacity: 0; pointer-events: none; }
+  #help { position: fixed; left: 16px; bottom: 16px; z-index: 10; padding: 10px 14px; font-size: 12px; color: var(--ink-2); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; max-width: calc(100vw - 180px); }
 
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .text-matrix { color: var(--terminal-green); }
-        
-        /* CRT Scanline Effect */
-        .scanlines {
-            background: linear-gradient(
-                to bottom,
-                rgba(255,255,255,0),
-                rgba(255,255,255,0) 50%,
-                rgba(0,0,0,0.1) 50%,
-                rgba(0,0,0,0.1)
-            );
-            background-size: 100% 4px;
-            position: fixed;
-            top: 0; right: 0; bottom: 0; left: 0;
-            z-index: 9999;
-            pointer-events: none;
-            opacity: 0.15;
-        }
+  #toasts { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+  .toast { background: var(--card); box-shadow: var(--shadow); border-radius: 12px; padding: 9px 16px; font-size: 14px; border-left: 5px solid var(--c, var(--accent)); animation: toast 3.4s forwards; max-width: 90vw; }
+  .toast.big { font-size: 17px; padding: 14px 22px; }
+  .toast b { color: var(--c, var(--accent)); }
+  @keyframes toast { 0% { opacity: 0; transform: translateY(-10px) scale(.97); } 7%, 86% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 
-        /* Custom Selection */
-        ::selection {
-            background: var(--terminal-green);
-            color: #000;
-        }
+  #drawer { position: fixed; top: 216px; right: 16px; max-height: calc(100vh - 306px); width: 390px; z-index: 20; display: flex; flex-direction: column; overflow: hidden;
+            transform: translateX(calc(100% + 24px)); transition: transform .6s cubic-bezier(.25,.8,.25,1); border-top: 6px solid var(--c, var(--accent)); }
+  #drawer.open { transform: none; }
+  #drawer.min .body { display: none; }
+  #drawer.min header { cursor: pointer; }
+  #drawer header { padding: 16px 18px 10px; position: relative; }
+  .x { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 9px; font-size: 20px; color: var(--ink-3); }
+  .x:hover { background: rgba(31,36,48,.06); color: var(--ink); }
+  .kicker { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: .08em; color: var(--c, var(--accent)); text-transform: uppercase; }
+  #drawer h2, .modal h2 { font-size: 22px; line-height: 1.2; margin: 4px 36px 2px 0; }
+  #drawer h2 { margin-right: 110px; }
+  #reader .modal h2 { font-size: 30px; }
+  #reader .body p, #reader .body li { font-size: 16px; }
+  .meta { font-size: 13px; color: var(--ink-3); }
+  #drawer .body { padding: 4px 18px 18px; overflow-y: auto; }
+  .body p, .modal p { font-size: 14.5px; line-height: 1.6; color: var(--ink-2); }
+  .body h3, .modal h3 { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .1em; color: var(--ink-3); text-transform: uppercase; margin: 18px 0 8px; font-weight: 600; }
+  .body ul { list-style: none; display: grid; gap: 7px; margin-top: 8px; }
+  .body li { font-size: 14px; line-height: 1.5; color: var(--ink-2); padding-left: 16px; position: relative; }
+  .body li::before { content: ''; position: absolute; left: 2px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--c, var(--accent)); }
+  .item { border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; background: #fff; }
+  .item + .item { margin-top: 8px; }
+  .item-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .item-top b { font-size: 14.5px; }
+  .item-top > span { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+  .item-top > span.badge, .rows .badge { color: #fff; font-size: 10px; }
+  .item p { font-size: 13px; margin-top: 4px; }
+  .item a { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--c, var(--accent)); text-decoration: none; }
+  .badge { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; color: #fff; background: var(--b, var(--ink-3)); white-space: nowrap; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .tags span { font-size: 11.5px; padding: 3px 9px; border-radius: 99px; background: rgba(31,36,48,.06); color: var(--ink-2); }
+  .rows div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 13.5px; color: var(--ink-2); }
+  .rows div span:last-child { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .links a { text-decoration: none; font-weight: 600; font-size: 13px; padding: 9px 14px; border-radius: 10px; background: rgba(31,36,48,.06); }
+  .links a:hover { background: rgba(31,36,48,.1); }
+  .links a.primary { background: var(--ink); color: #fff; }
+  .go { display: flex; flex-wrap: wrap; gap: 6px; }
+  .go button { font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 99px; background: #fff; border: 2px solid var(--c); }
+  .go button:hover { background: var(--c); color: #fff; }
+  .challenge { margin-top: 16px; padding: 11px 13px; border-radius: 12px; background: rgba(31,36,48,.05); border-left: 4px solid var(--c); font-size: 13.5px; color: var(--ink); line-height: 1.5; }
+  .challenge b { font-family: 'JetBrains Mono', monospace; font-size: 11px; display: block; color: var(--c); }
 
-        /* Terminal Box Styling */
-        .terminal-box {
-            background: rgba(10, 10, 10, 0.8);
-            border: 1px solid #333;
-            box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.7);
-            transition: all 0.2s ease;
-        }
-        .terminal-box:hover {
-            border-color: var(--terminal-dim);
-            box-shadow: 4px 4px 0 0 var(--terminal-dim);
-            transform: translate(-2px, -2px);
-        }
+  .overlay { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(31, 36, 48, .35); backdrop-filter: blur(4px); }
+  .overlay.open { display: flex; }
+  .modal { width: 100%; max-width: 640px; max-height: calc(100vh - 32px); overflow-y: auto; padding: 24px 26px; position: relative; border-top: 6px solid var(--c, var(--accent)); }
+  .tabs { display: flex; gap: 6px; margin: 12px 0; }
+  .tabs button { padding: 6px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; background: rgba(31,36,48,.06); }
+  .tabs button.on { background: var(--ink); color: #fff; }
+  table.lb { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.lb th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-3); padding: 6px 8px; border-bottom: 1px solid var(--line); font-weight: 600; }
+  table.lb td { padding: 8px; border-bottom: 1px dashed var(--line); }
+  table.lb td.n { font-family: 'JetBrains Mono', monospace; color: var(--ink-3); width: 30px; }
+  table.lb tbody tr:first-child td.n { color: var(--gold); font-weight: 700; }
+  table.lb tr.you td { background: rgba(255,107,53,.1); }
+  .root-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; background: var(--ink); color: var(--gold); padding: 1px 5px; border-radius: 4px; margin-left: 6px; }
+  .stats3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
+  .stats3 div { background: rgba(31,36,48,.05); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: var(--ink-3); font-family: 'JetBrains Mono', monospace; }
+  .stats3 b { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 22px; color: var(--ink); }
+  .skill { padding: 9px 0; border-bottom: 1px dashed var(--line); }
+  .skill .top { display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; }
+  .skill .top span { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-3); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ach { display: flex; gap: 10px; align-items: center; padding: 9px 11px; border-radius: 12px; background: rgba(31,36,48,.04); font-size: 12.5px; color: var(--ink-3); }
+  .ach i { font-style: normal; font-size: 18px; filter: grayscale(1); opacity: .4; }
+  .ach.on { background: rgba(22,163,74,.1); color: var(--ink); }
+  .ach.on i { filter: none; opacity: 1; }
+  .ach b { display: block; font-size: 13px; }
+  .rules { display: grid; gap: 10px; counter-reset: r; }
+  .rules div { display: flex; gap: 12px; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+  .rules div::before { counter-increment: r; content: counter(r); flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+  .keys { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 8px 12px; align-items: center; font-size: 13px; color: var(--ink-2); }
 
-        /* Blinking Cursor */
-        .cursor-blink {
-            animation: blink 1s step-end infinite;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
+  #intro { background: linear-gradient(160deg, rgba(255,230,200,.7), rgba(150,210,230,.7)); }
+  #intro .modal { max-width: 560px; }
+  #intro h1 { font-size: 48px; line-height: 1; letter-spacing: -0.03em; }
+  #intro h1 span { color: var(--accent); }
+  .cta { width: 100%; margin-top: 18px; padding: 15px; border-radius: 14px; background: var(--accent); color: #fff; font-weight: 700; font-size: 16px; box-shadow: 0 6px 0 #c94a1c; transition: transform .1s, box-shadow .1s; }
+  .cta:active { transform: translateY(4px); box-shadow: 0 2px 0 #c94a1c; }
+  .cta:disabled { opacity: .6; }
+  .sub { display: flex; justify-content: space-between; gap: 12px; margin-top: 14px; font-size: 13px; }
+  .sub a, .sub button { color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+  #visitors { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-3); margin-top: 12px; min-height: 14px; }
 
-        /* Timeline Line */
-        .timeline-line {
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 1px;
-            background: linear-gradient(to bottom, var(--terminal-green), transparent);
-        }
+  #map .modal { max-width: 900px; }
+  .map-wrap { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  #bigmap { width: 100%; aspect-ratio: 1; border-radius: 16px; display: block; }
+  .places { display: grid; gap: 6px; }
+  .places button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(31,36,48,.04); text-align: left; font-size: 14px; font-weight: 600; }
+  .places button:hover { background: rgba(31,36,48,.08); }
+  .places i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); flex: none; }
+  .places small { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-3); font-weight: 600; }
+  .places small.ok { color: var(--ok); }
 
-        /* Smooth Scroll Offset */
-        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
-        
-        .hidden { display: none; }
-
-        /* CERT LIST FIX: Enforce padding and flex for alignment */
-        .cert-list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding-bottom: 4px;
-            margin-bottom: 4px;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
-        }
-        .cert-list-item > span:first-child {
-            flex-grow: 1;
-            padding-right: 1rem; /* Space between title and date */
-        }
-        .cert-list-item > span:last-child {
-            flex-shrink: 0;
-            text-align: right;
-        }
-        
-        /* Affiliations Tile Style */
-        .affiliate-tile {
-            background: rgba(40, 40, 60, 0.2); /* Dark purple tint */
-            border: 1px solid rgba(120, 120, 160, 0.3);
-            transition: all 0.2s ease;
-        }
-        .affiliate-tile:hover {
-            background: rgba(40, 40, 60, 0.4);
-            border-color: #8b5cf6; /* Violet/Purple */
-        }
-    </style>
+  #touch { position: fixed; inset: auto 0 0 0; z-index: 12; display: none; justify-content: space-between; padding: 14px; pointer-events: none; }
+  #touch div { display: flex; gap: 8px; pointer-events: auto; align-items: flex-end; }
+  #touch button { width: 60px; height: 60px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); font-size: 20px; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #touch button.on { background: var(--accent); color: #fff; }
+  #touch button.locked { display: none; }
+  @media (pointer: coarse) { #touch { display: flex; } #help { display: none; } #speedo { bottom: 88px; } }
+  @media (max-width: 760px) {
+    .map-wrap { grid-template-columns: 1fr; }
+    #drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; height: 46vh; transform: translateY(calc(100% + 24px)); }
+    #drawer.open { transform: none; }
+    #hud { width: 210px; padding: 10px 12px; }
+    #minimap { width: 96px; height: 96px; }
+    .keys { grid-template-columns: auto 1fr; }
+    #intro h1 { font-size: 38px; }
+    .flags b { width: 18px; height: 18px; }
+    .grid2 { grid-template-columns: 1fr; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
 </head>
-<body class="antialiased relative">
+<body>
+<canvas id="scene"></canvas>
+<div id="labels"></div>
 
-    <div class="scanlines"></div>
+<div id="hud" class="card">
+  <div class="lvl"><span>LV <span id="h-lvl">1</span> · <span id="h-title">Script Kiddie</span></span><span id="h-pts">0 pts</span></div>
+  <div class="bar"><i id="h-bar"></i></div>
+  <div class="flags" id="h-flags"></div>
+  <div id="goal" title="Open map"><i></i><span id="goal-t">Drive to explore</span></div>
+</div>
+<div id="side">
+  <canvas id="minimap" width="300" height="300" title="Open map"></canvas>
+  <div class="btns">
+    <button class="btn" data-open="map">Map</button>
+    <button class="btn" data-open="sheet">Skills</button>
+    <button class="btn" data-open="board">Scores</button>
+    <button class="btn" data-open="rules">Rules</button>
+  </div>
+</div>
+<div id="speedo" class="card"><b id="spd">0</b><small>KM/H · <span id="ride-name">BIKE</span></small><div class="bar" id="boostbar" style="--c:var(--gold)"><i id="boost-i" style="width:100%"></i></div></div>
+<div id="help" class="card"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive</span><span><kbd>B</kbd> brake</span><span><kbd>R</kbd> respawn</span><span><kbd>H</kbd> honk</span><span><kbd>M</kbd> map</span><span><kbd>E</kbd> zoom</span><span><kbd>Enter</kbd> read</span><span>drag to look around</span></div>
+<div id="toasts"></div>
+<div id="tip"></div>
+<button id="prompt" class="card"><span id="prompt-ico">🔍</span><span><b id="prompt-t"></b><small id="prompt-s"></small></span><kbd id="prompt-k">E</kbd></button>
 
-    <!-- Navbar -->
-    <nav class="fixed top-0 w-full z-50 bg-[#050505]/90 backdrop-blur-sm border-b border-white/5">
-        <div class="max-w-5xl mx-auto px-6 h-16 flex justify-between items-center font-mono text-sm">
-            <a href="#" class="text-matrix font-bold flex items-center gap-2">
-                <span class="text-white">~/</span>d4mr0<span class="cursor-blink">_</span>
-            </a>
-            
-            <div class="hidden md:flex gap-6 text-gray-400">
-                <a href="#work" class="hover:text-white transition-colors">[ work ]</a>
-                <a href="#research" class="hover:text-white transition-colors">[ research ]</a>
-                <a href="#skills" class="hover:text-white transition-colors">[ arsenal ]</a>
-                <a href="#creds" class="hover:text-white transition-colors">[ creds ]</a>
-                <a href="#intel" class="hover:text-white transition-colors">[ intel ]</a>
-                
-            </div>
+<aside id="drawer" class="card"><header><button class="x" id="drawer-big" aria-label="Read in front" title="Read in front (Enter)" style="right:84px">⤢</button><button class="x" id="drawer-min" aria-label="Collapse" title="Collapse" style="right:48px">–</button><button class="x" id="drawer-x" aria-label="Close">×</button><div class="kicker" id="d-kicker"></div><h2 id="d-title"></h2><div class="meta" id="d-meta"></div></header><div class="body" id="d-body"></div></aside>
 
-            <a href="#contact" onclick="scrollToContact(event)" class="text-xs border border-white/20 px-3 py-1 rounded hover:bg-white hover:text-black transition-all">
-                CONTACT
-            </a>
-        </div>
-    </nav>
+<div id="touch">
+  <div><button data-k="left">◀</button><button data-k="right">▶</button></div>
+  <div><button data-k="jump" class="locked">⤒</button><button data-k="boost" class="locked">⚡</button><button data-k="down">▼</button><button data-k="up">▲</button></div>
+</div>
 
-    <main class="max-w-5xl mx-auto px-6 pt-32 pb-24">
+<div class="overlay open" id="intro">
+  <div class="modal card">
+    <div class="kicker">Portfolio · capture the flag</div>
+    <h1>d4mr0 <span>CTF</span> Island</h1>
+    <p style="margin-top:12px">Hi, I'm <b>Daksh Khurana</b>, an AI researcher and security engineer. Explore the island to learn about my work. Each area holds a flag; capture all six to reveal the secret <b>root</b> flag.</p>
+    <div class="keys" style="margin-top:16px">
+      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>drive</span><span><kbd>M</kbd></span><span>map &amp; fast travel</span>
+      <span><kbd>B</kbd></span><span>brake</span><span><kbd>R</kbd></span><span>respawn if stuck</span>
+    </div>
+    <button class="cta" id="btn-start" disabled>Loading island…</button>
+    <div class="sub"><a href="classic.html">Recruiter? Classic view →</a><a href="CV.pdf" target="_blank">CV ↗</a><button data-open="rules">Rules</button></div>
+    <div id="visitors"></div>
+  </div>
+</div>
 
-        <!-- 1. INTRO / HERO -->
-        <section class="mb-24">
-            <p class="font-mono text-green-500 text-sm mb-4">
-                > INITIALIZING SECURE SESSION... <span class="text-white">OK</span>
-            </p>
-            <h1 class="text-6xl md:text-8xl font-bold text-white tracking-tighter mb-6">
-                d4mr0 ...
-            </h1>
-            <div class="text-xl md:text-2xl text-gray-400 font-light max-w-2xl leading-relaxed">
-                Offensive Security Engineer & AI Researcher. <br>
-                <span class="text-white font-medium">I break systems to make them unbreakable.</span>
-            </div>
-            
-            <div class="mt-10 flex gap-4 font-mono text-sm">
-                <a href="https://github.com/1n1t6Sh3ll/Portfolio/blob/main/CV.pdf"  target="_blank"  class="bg-white text-black px-6 py-3 font-bold hover:bg-gray-200 transition-colors">
-                    Résumé
-                </a>
-                <a href="https://github.com/1n1t6Sh3ll" target="_blank" class="border border-white/20 px-6 py-3 text-gray-300 hover:border-white hover:text-white transition-colors">
-                    GITHUB #1
-                </a>
-                <a href="https://github.com/n16htb0t" target="_blank" class="border border-white/20 px-6 py-3 text-gray-300 hover:border-white hover:text-white transition-colors">
-                    GITHUB #2
-                </a>
+<div class="overlay" id="map"><div class="modal card" style="--c:#14b8a6"><button class="x" data-close>×</button><div class="kicker">Island map</div><h2>Where to?</h2><p class="meta">Click a place to travel there instantly.</p>
+  <div class="map-wrap" style="margin-top:14px"><canvas id="bigmap" width="900" height="900"></canvas><div class="places" id="places"></div></div></div></div>
+<div class="overlay" id="reader"><div class="modal card" id="reader-body" style="max-width:760px"></div></div>
+<div class="overlay" id="sheet"><div class="modal card" id="sheet-body" style="--c:#8b5cf6"></div></div>
+<div class="overlay" id="board"><div class="modal card" id="board-body" style="--c:#f5b301"></div></div>
+<div class="overlay" id="rules"><div class="modal card" style="--c:#ff6b35"><button class="x" data-close>×</button><div class="kicker">How to play</div><h2>Rules</h2>
+  <div class="rules" style="margin-top:14px">
+    <div>Each of the 6 areas has a flag. Complete the area's challenge, then drive into the flag to capture it: <b>+100 pts</b>.</div>
+    <div>13 gold Hall of Fame coins are hidden around the island: <b>+25 pts</b> each.</div>
+    <div>Capture all 6 flags and the secret <b>root</b> flag appears on Root Hill: <b>+300 pts</b>.</div>
+    <div>Points level you up and unlock gear: boost, jump, the truck, paint, night mode, and gold ROOT status.</div>
+    <div>Every flag and coin counts once. The scoreboard ranks by points, then by fastest full clear.</div>
+    <div>You get a random explorer name and your country's flag automatically. No sign-up.</div>
+  </div>
+  <h3>Controls</h3>
+  <div class="keys">
+    <span><kbd>W</kbd><kbd>S</kbd></span><span>throttle / reverse</span><span><kbd>A</kbd><kbd>D</kbd></span><span>steer</span>
+    <span><kbd>B</kbd></span><span>brake</span><span><kbd>SHIFT</kbd></span><span>boost (LV 2)</span>
+    <span><kbd>SPACE</kbd></span><span>jump (LV 3)</span><span><kbd>V</kbd></span><span>swap to truck (LV 4)</span>
+    <span><kbd>P</kbd></span><span>paint (LV 5)</span><span><kbd>N</kbd></span><span>night mode (LV 6)</span>
+    <span><kbd>R</kbd></span><span>respawn</span><span><kbd>H</kbd></span><span>honk</span>
+    <span><kbd>M</kbd><kbd>C</kbd><kbd>L</kbd></span><span>map · skills · scores</span><span>drag · wheel</span><span>rotate · zoom camera</span>
+  </div></div></div>
 
-                <a href="https://linkedin.com/in/dakshkhurana1222/" target="_blank" class="border border-white/20 px-6 py-3 text-gray-300 hover:border-white hover:text-white transition-colors">
-                    LINKEDIN
-                </a>
-            </div>
+<script type="module">
+import * as THREE from 'three';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-            <!-- Compact Stats (REVISED to 3 columns) -->
-            <div class="grid grid-cols-3 gap-4 mt-16 pt-8 border-t border-white/10 font-mono text-xs">
-                <div class="col-span-1">
-                    <span class="block text-2xl font-bold text-white mb-1">15+</span>
-                    <span class="text-gray-500">VERIFIED CERTS</span>
-                </div>
-                <div class="col-span-1">
-                    <span class="block text-2xl font-bold text-white mb-1">40+</span>
-                    <span class="text-gray-500">VDP HALL OF FAMES</span>
-                </div>
-                <div class="col-span-1">
-                    <span class="block text-2xl font-bold text-white mb-1">4+years</span>
-                    <span class="text-gray-500">FIELD EXPERIENCE</span>
-                </div>
-            </div>
-        </section>
+/* =====================================================================
+   RULES (keep in sync with api/_game.js)
+   ===================================================================== */
+const PTS = { flag: 100, coin: 25, root: 300 };
+const LEVELS = [
+  { pts: 0,    title: 'Script Kiddie' },
+  { pts: 100,  title: 'Recon Rider',   key: 'boost', unlock: ['Boost', 'Hold SHIFT'] },
+  { pts: 250,  title: 'Bug Hunter',    key: 'jump',  unlock: ['Jump', 'Press SPACE'] },
+  { pts: 450,  title: 'Pentester',     key: 'truck', unlock: ['Truck', 'Press V to swap'] },
+  { pts: 650,  title: 'Red Teamer',    key: 'paint', unlock: ['Paint shop', 'Press P'] },
+  { pts: 900,  title: 'AI Researcher', key: 'night', unlock: ['Night mode', 'Press N'] },
+  { pts: 1225, title: 'ROOT',          key: 'gold',  unlock: ['Gold paint & ROOT badge', 'Shown on the scoreboard'] },
+];
 
-        <!-- 2. WORK HISTORY -->
-        <section id="work" class="mb-24">
-            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
-                <h2 class="text-3xl font-bold text-white">Mission Log</h2>
-                <span class="font-mono text-xs text-gray-500 hidden md:block">/var/log/experience</span>
-            </div>
+/* =====================================================================
+   CONTENT: every fact lives in exactly one area
+   ===================================================================== */
+const LINKS = { scholar: 'https://scholar.google.com/citations?user=O24nJhEAAAAJ', resume: 'CV.pdf', linkedin: 'https://linkedin.com/in/dakshkhurana1222/', gh1: 'https://github.com/1n1t6Sh3ll', gh2: 'https://github.com/n16htb0t', email: 'mailto:dakshkhurana1222@gmail.com' };
+const HOF = ['Dell Technologies', 'Pinterest', 'EC-Council', 'Wageningen Univ', 'Pizza Hut', 'BlueJeans', 'Careem', 'Humble Bundle', 'SAP Concur', 'Under Armour', 'Unilever', 'Viator', 'SmartThings'];
+const SKILLS = [
+  { key: 'ai',    name: 'AI & ML Research',   color: '#8b5cf6', list: ['Computer Vision', 'Video Segmentation', 'Vision-Language Models', 'LLMs', 'GNNs', 'Transformers', 'Reinforcement Learning', 'PyTorch', 'TensorFlow', 'YOLO', 'OpenCV'] },
+  { key: 'dev',   name: 'Software Dev',       color: '#22c55e', list: ['Python', 'C / C++', 'Java', 'JavaScript', 'React', 'Express', 'Flask', 'Flutter', 'Solidity', 'Hardhat', 'LangChain', 'AI Agents'] },
+  { key: 'data',  name: 'Data & Research',    color: '#0891b2', list: ['NumPy', 'Pandas', 'scikit-learn', 'Big Data Analytics', 'SQL / NoSQL', 'Dataset Building', 'Experiment Design', 'Paper Writing'] },
+  { key: 'off',   name: 'Offensive Security', color: '#ef4444', list: ['Web/Mobile/API VAPT', 'LLM Red Teaming', 'Active Directory', 'Reverse Engineering', 'Burp Suite Pro', 'Metasploit'] },
+  { key: 'cloud', name: 'Cloud & Infra',      color: '#0ea5e9', list: ['AWS', 'Azure', 'GCP', 'Docker', 'Microsoft Sentinel', 'Splunk'] },
+  { key: 'hw',    name: 'Hardware & IoT',     color: '#f97316', list: ['Firmware', 'UART / JTAG', 'ARM & x86 Assembly', 'CAN bus', 'SDR / HackRF'] },
+];
 
-            <div class="relative pl-8 space-y-12">
-                <div class="timeline-line"></div>
+const ul = a => `<ul>${a.map(x => `<li>${x}</li>`).join('')}</ul>`;
+const tags = a => `<div class="tags">${a.map(t => `<span>${t}</span>`).join('')}</div>`;
+const rows = a => `<div class="rows">${a.map(([l, r]) => `<div><span>${l}</span><span>${r}</span></div>`).join('')}</div>`;
+const badge = (t, c) => `<span class="badge" style="--b:${c}">${t}</span>`;
+const item = (t, right, p = '', extra = '') => `<div class="item"><div class="item-top"><b>${t}</b>${right}</div>${p ? `<p>${p}</p>` : ''}${extra}</div>`;
 
-                <!-- Job 1: Penetration Tester -->
-                <div class="relative">
-                    <div class="absolute -left-[37px] top-1.5 w-3 h-3 bg-[#050505] border-2 border-green-500 rounded-full"></div>
-                    <div class="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2">
-                        <h3 class="text-xl font-bold text-white">Penetration Tester</h3>
-                        <span class="font-mono text-xs text-green-400">Jul. 2024 — Aug. 2025</span>
-                    </div>
-                    <p class="text-sm text-gray-400 font-mono mb-3">Bright Security | San Rafael, CA</p>
-                    <ul class="list-disc list-outside ml-4 text-gray-400 text-sm space-y-1">
-                        <li>Conducted comprehensive VAPT across client and internal applications (web, mobile, cloud, thick client).</li>
-                        <li>Conducted internal security testing and audited cloud infrastructure to identify and remediate misconfigurations, risks, and vulnerabilities, enhancing overall security posture.</li>
-                        <li>Actively contributed to internal security research and tool development, enhancing the efficiency and effectiveness of in-house security solutions.</li>
-                        <li>Effectively communicated technical findings to technical and non-technical stakeholders, improving reporting quality, onboarding new clients, and strengthening relationships with existing ones.</li>
-                    </ul>
-                </div>
+// Career Road gates, oldest first (south → north)
+const JOBS = [
+  { id: 'bugcrowd', date: 'Mar 2022 — Aug 2025', role: 'Security Researcher', org: 'Bugcrowd · Remote · Freelance', color: '#f97316', line: 'Bug bounty hunting · 40+ Halls of Fame',
+    body: () => `<p>Independent bug bounty research on public and private programs.</p>
+      ${ul(['Found and responsibly disclosed vulnerabilities in production web applications and APIs.',
+            'Wrote clear reproduction steps and impact reports that teams could act on quickly.',
+            'Recognized in the Security Hall of Fame of 40+ organizations, including Dell, Pinterest and EC-Council.'])}` },
+  { id: 'vtf', date: 'Nov 2023 — Jan 2024', role: 'Cloud Security Intern', org: 'Virtually Testing Foundation · California', color: '#0ea5e9', line: 'AWS & Azure threat detection',
+    body: () => `<p>Cloud security internship focused on detection, monitoring and misconfiguration review.</p>
+      ${ul(['Assessed AWS and Azure environments using CloudTrail, CloudWatch, Cognito, Azure AD and Microsoft Sentinel.',
+            'Identified misconfigurations and supported remediation and ongoing monitoring.'])}` },
+  { id: 'bright', date: 'Jul 2024 — Aug 2025', role: 'Penetration Tester', org: 'Bright Security · San Rafael, CA · Full-time', color: '#ef4444', line: 'VAPT on LLMs, web, mobile & cloud',
+    body: () => `<p>End-to-end offensive security testing at an application security company.</p>
+      ${ul(['Performed VAPT on LLM features and on web, mobile, cloud, thick-client and internal applications.',
+            'Mapped AWS infrastructure and delivered recommendations that strengthened cloud security posture.',
+            'Partnered with engineering teams from finding to fix, and contributed to internal research tooling.',
+            'Presented findings to technical and business stakeholders and supported client onboarding.'])}` },
+  { id: 'fdu', date: 'Sep 2025 — Present', role: 'Research & Teaching', org: 'Fairleigh Dickinson University · Teaneck, NJ · 3 roles', color: '#8b5cf6', line: 'DeepChain Lab · satellite AI · teaching',
+    body: () => `<p>Three part-time roles at FDU, held alongside my M.S.: two in research, one in teaching.</p>
+      <h3>Research Assistant (Volunteer) · DeepChain Lab</h3>
+      <p class="meta" style="margin:-4px 0 6px">Sep 2025 — Present</p>
+      ${ul(['Apply deep learning to video segmentation and object tracking, contributing to paper submissions.',
+            'Develop graph neural network (GNN) models for skin-cancer image classification.'])}
+      <h3>Research Assistant · Satellite AI</h3>
+      <p class="meta" style="margin:-4px 0 6px">Feb 2026 — Present · Hybrid</p>
+      ${ul(['Apply deep learning to satellite imagery to model ice formation over narrow water channels.',
+            'Design experiments and optimize models through algorithm development and geospatial analysis.'])}
+      <h3>Teaching Assistant</h3>
+      <p class="meta" style="margin:-4px 0 6px">Jan — Mar 2026 · Aug 2026 — Present · Hybrid</p>
+      ${ul(['Current: evaluate coursework for Database Systems (CSCI 3268/6623), Advanced Database Systems (CSCI 3351/7781) and Firewall & IDS (CSCI 3345/6873).',
+            'Spring 2026: graded CSCI 3410, INFO 4410 and CSCI 6738 (Cybersecurity).'])}
+      <p style="margin-top:10px;font-size:13px">Research details and papers are in the <b>Research Lab</b> and <b>The Library</b>.</p>` },
+];
+const RESEARCH = [
+  ['Aerial threat detection', 'PAPER IN PROGRESS', '#0ea5e9', 'Deep-learning video segmentation for detecting aerial threats.'],
+  ['Melanoma diagnosis with LVLMs', 'PAPER IN PROGRESS', '#0ea5e9', 'Large vision-language models for melanoma skin-cancer diagnosis (Fall 2026).'],
+  ['River ice from satellite imagery', 'ONGOING', '#0ea5e9', 'Modeling ice formation over narrow river channels from satellite data.'],
+  ['Breast cancer treatment response', 'SUBMITTED', '#f5b301', 'Interpretable concept-bottleneck VLM that predicts treatment response from breast DCE-MRI.'],
+];
+// From Google Scholar (profile: 6 citations, h-index 1)
+const PAPERS = [
+  ['Role of GNN in Skin Cancer Classification', '<b>D. Khurana</b>, M. Patel, L. Mancinelli, A. Vatsa · 16th IEEE ISEC, Princeton · 2026 · cited by 5', 'PUBLISHED', '#16a34a'],
+  ['Review on Video Segmentation for Sustainability', '<b>D. Khurana</b>, H. Mittal, O. Joseph, A. Vatsa · IEEE ISEC, Princeton · 2026', 'PUBLISHED', '#16a34a'],
+  ['Interpretable Concept-Bottleneck Vision-Language Model Predicts Pathologic Complete Response From Longitudinal Breast DCE-MRI', 'C.N. Li, <b>D. Khurana</b>, T. Maldjian, T. Duong · npj Digital Medicine (Springer) · preprint on Research Square · 2026', 'UNDER REVIEW', '#f5b301', 'https://doi.org/10.21203/rs.3.rs-11040164/v1'],
+  ['Meta-Analysis on Image Classification Using GNN', 'M. Patel, <b>D. Khurana</b>, L. Mancinelli, A. Vatsa · Springer · 2026 · cited by 1', 'UNDER REVIEW', '#f5b301'],
+];
+const ARTICLES = [
+  ['Is Your AI Assistant Leaking Secrets?', 'Bright Security', 'Feb 2026', 'https://brightsec.com/blog/is-your-ai-assistant-leaking-secrets-a-look-at-data-exfiltration-in-code-generation/'],
+  ['Beyond the Sandbox: Advanced LLM Red Teaming', 'Bright Security', 'Jan 2026', 'https://brightsec.com/blog/beyond-the-sandbox-advanced-techniques-for-llm-red-teaming/'],
+  ['Prompt Injection: Why AppSec Tools Fall Short', 'Bright Security', 'Jan 2026', 'https://brightsec.com/blog/prompt-injection-attacks-why-traditional-appsec-tools-fall-short/'],
+  ['The 2026 State of LLM Security', 'Bright Security', 'Jan 2026', 'https://brightsec.com/blog/the-2026-state-of-llm-security-key-findings-and-benchmarks/'],
+  ['Configure Bright MCP in Augment Code', 'Bright Security', 'Jan 2026', 'https://brightsec.com/blog/configure-bright-mcp-in-augment-code/'],
+  ['Guarding the Grid: Securing EV Charging Stations', 'AutoSecurityy', 'Sep 2025', 'https://medium.com/autosecurityy/guarding-the-grid-securing-the-future-of-ev-charging-stations-042090262453'],
+];
+const PROJECTS = [
+  ['Aparece', 'Oct 2026', 'Helps small shops become visible to AI shopping assistants. Built in 24 hours with a team of AI agents coordinated by my own orchestration layer, which also fact-checks AI-written fixes.', ['AI Agents', 'Hackathon']],
+  ['CryptoCredit Bank', 'Spring 2026', 'Senior project: a full-stack DeFi lending protocol with collateralized loans, credit scoring and liquidation, deployed on Ethereum Sepolia.', ['Solidity', 'Hardhat', 'React', 'Docker']],
+  ['Human vs. LLM-generated apps', 'Fall 2025', 'Builds the same mobile apps from human-written and LLM-generated code and compares their vulnerabilities.', ['LLM Security', 'Mobile']],
+  ['MLB MVP Predictor', 'Fall 2025', 'Flask app that predicts MVP outcomes with regression and ensemble models.', ['scikit-learn', 'Flask']],
+  ['EasyTUS review & PoC', 'Fall 2025', 'Paper review and a proof of concept for fuzzy table matching.', ['SQL']],
+  ['Smart Agriculture Platform', 'Spring 2025', 'Crop and fertilizer recommendations based on weather and price trends.', ['scikit-learn', 'IoT'], 'https://github.com/n16htb0t/Ml-Project-Agrimart'],
+  ['Embedded Security with AI', 'Jun 2024', 'Uses OpenAI, LangChain and YOLO to read FCC ID data and datasheets and generate hardware security reports.', ['YOLO', 'LangChain'], 'https://github.com/n16htb0t/EmbeddedAI/'],
+  ['Signals in the Wild', 'Fall 2023', 'Live HackRF demo: ADS-B aircraft tracking, RF decoding and replay attacks.', ['SDR']],
+  ['Teen Sage', 'Dec 2022', 'Mobile app on adolescent mental health and sex education.', ['Flutter', 'Firebase'], 'https://github.com/1n1t6Sh3ll/TeenSage/'],
+];
+const CERTS = [['Certified Red Team Expert (CRTE)', 'Sep 2025'], ['Supervised Machine Learning with scikit-learn', 'Apr 2025'], ['Web Application Penetration Tester eXtreme (eWPTXv2)', 'Oct 2024'], ['Certified Cloud Security Practitioner, AWS (CCSP-AWS)', 'Jun 2024'],
+  ['AWS Certified Security – Specialty', 'Jan 2024'], ['Microsoft Azure Security Technologies (AZ-500)', 'Jan 2024'], ['Microsoft Security Fundamentals (SC-900)', 'Jan 2024'], ['ICS Cybersecurity Risk (210W-05)', 'Sep 2023'],
+  ['Cisco Network Essentials', 'Apr 2023'], ['Certified Ethical Hacker (Practical)', 'Mar 2023'], ['Certified Cyber Hygiene Practitioner', 'Feb 2023'],
+  ['Certified AppSec Practitioner', 'Feb 2023'], ['Python Programming (edX)', 'Feb 2023'], ['Automation Scripting with Bash', 'Sep 2022'], ['Hardware Security', 'Sep 2022']];
+const AWARDS = [['Finalist', 'HSI Battle of Brains, Texas', 'Sep 2026'], ['Top 5', 'BTU Hackathon, Tbilisi', 'Jun 2024'], ['Top 10', 'KRMU Hacks & Ideathon (AICTE)', 'Feb 2023'],
+  ['2nd place', 'Technovation', 'Dec 2022'], ['1st place', 'Smart Punjab Hackathon', 'Nov 2022'], ['1st place', 'US Air Force Steganography CTF', 'Nov 2020'], ['2nd place', 'Agritech Hackathon', 'Nov 2020']];
+const EVENTS = [['IoT Hacking talk with Omkar Mali', '2026-11-25', 'ORGANIZER'], ['GAP 0.1: AI-Driven Software Development', '2026-11-18', 'ORGANIZER'],
+  ['IEEE AI 6.0 Workshop, FDU', '2026-10-14', 'ATTENDEE'], ['IEEE ISAIA 2026, Montclair State University', '2026-06-01', 'AUTHOR'], ['IEEE ISEC 2026, Princeton University', '2026-03-01', 'AUTHOR'],
+  ['IEEE Summit on Applied AI for Bioinformatics & Cybersecurity', '2025-12-09', 'SPEAKER'], ['Academic Conference on Africa, UN Headquarters', '2025-12-01', 'DELEGATE'],
+  ['GlobalMindED / FSUN, UN Headquarters', '2025-10-20', 'DELEGATE'], ['Nullcon & Seasides, Goa', '2023-09-25', 'ATTENDEE'], ['BSides Bangalore, Delhi & Ahmedabad', '2023-06-01', 'ATTENDEE'],
+  ['DEF CON Delhi (9111)', '2022-08-06', 'ATTENDEE'], ['Harvard US-India Initiative', '2021-02-05', 'DELEGATE']];
+// Organizations and volunteering (from LinkedIn)
+const ORGS = [
+  ['Chairperson', 'IEEE CIS & AP-S Student Chapter, FDU', 'Nov 2026 — Present', '#2563eb', 'Lead the chapter and organize its technical talks and workshops.'],
+  ['Leader', 'Global Scholars, Fairleigh Dickinson University', 'Sep 2025 — May 2026', '#8b5cf6', 'Led a cohort in FDU’s Global Scholars program.'],
+  ['Student Member', 'IEEE', 'Jul 2025 — Present', '#0ea5e9', 'Author, peer reviewer and volunteer at IEEE ISAIA 2026.'],
+  ['Member', 'Car Hackers Space', 'Oct 2025 — Present', '#f97316', 'Automotive security research community.'],
+  ['Core Team Member', 'AutoSecurityy', 'Mar 2024 — Aug 2025', '#ec4899', 'Produced articles, videos and infographics on connected-vehicle security threats, and turned complex research into accessible material for technical and non-technical audiences at industry and community events.'],
+];
+const roleC = r => ({ SPEAKER: '#ef4444', ORGANIZER: '#16a34a', AUTHOR: '#f5b301', DELEGATE: '#0ea5e9' }[r] || '#8a91a1');
+const day = s => new Date(s + 'T12:00:00');
 
-                <!-- Job 2: Security Researcher (Freelance) -->
-                <div class="relative">
-                    <div class="absolute -left-[37px] top-1.5 w-3 h-3 bg-[#050505] border-2 border-gray-500 rounded-full"></div>
-                    <div class="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2">
-                        <h3 class="text-xl font-bold text-white">Security Researcher (Freelance)</h3>
-                        <span class="font-mono text-xs text-gray-500">Mar. 2022 — Aug. 2025</span>
-                    </div>
-                    <p class="text-sm text-gray-400 font-mono mb-3">Bugcrowd | Remote, UK</p>
-                    <ul class="list-disc list-outside ml-4 text-gray-400 text-sm space-y-1">
-                        <li>Actively participated in bug bounty programs, showcasing expertise in identifying and responsibly disclosing vulnerabilities.</li>
-                        <li>Strengthened technical skills and deepened understanding of cybersecurity through hands-on engagement in ethical hacking practices.</li>
-                    </ul>
-                </div>
+// Layout follows a recruiter's priorities: skills and career straight ahead, research beside them, contact behind you.
+const AREAS = [
+  { id: 'spawn', name: 'Start', color: '#ff6b35', c: [0, 0], r: 16,
+    kicker: 'Welcome', head: "Hi, I'm Daksh", meta: 'AI researcher · security engineer · builder · Teaneck, NJ',
+    body: () => `<p>I work across AI research, software and security: computer vision and vision-language models, full-stack and agent projects, and offensive security. My full introduction and CV are at <b>About &amp; Contact</b>, directly behind you.</p>
+      <div class="links"><a class="primary" href="${LINKS.resume}" target="_blank">View CV ↗</a><a href="${LINKS.email}">Email</a><a href="${LINKS.linkedin}" target="_blank">LinkedIn ↗</a></div>
+      <h3>Jump to</h3><div class="go">${[['skills', 'Skills'], ['career', 'Career'], ['research', 'Research'], ['library', 'Papers'], ['workshop', 'Projects'], ['community', 'Community'], ['contact', 'About & CV']].map(([id, t]) => `<button data-go="${id}" style="--c:${AREA[id].color}">${t}</button>`).join('')}</div>
+      <p style="margin-top:12px;font-size:13px">Press <kbd>M</kbd> for the map. Signs and books are clickable.</p>` },
+  { id: 'skills', name: 'Skill Tree', color: '#16a34a', c: [15, -34], r: 13,
+    kicker: 'Skills', head: 'Skill Tree', meta: 'AI, software, data, security, cloud and hardware',
+    body: () => `<p>Six disciplines, one branch each. Capturing flags levels them up, and the orbs on the tree glow brighter as they grow.</p>${skillBars()}` },
+  { id: 'career', name: 'Career Road', color: '#f59e0b', c: [0, -58], r: 0, flag: [0, -100], skills: { off: 3, cloud: 2, hw: 1, ai: 2, dev: 1, data: 1 },
+    challenge: `Drive through all ${JOBS.length} career gates, then take the flag at the end of the road.`,
+    kicker: 'Experience', head: 'Career Road', meta: `${JOBS.length} roles, oldest first. Drive north through each gate.`,
+    body: () => rows(JOBS.map(j => [`<b>${j.role}</b> · ${j.org.split(' · ')[0]}`, j.date.split(' — ')[0]])) },
+  { id: 'research', name: 'Research Lab', color: '#8b5cf6', c: [52, -50], r: 22, labelAbove: true, flag: [52, -50], skills: { ai: 6, data: 3 },
+    challenge: 'A drone is circling the lab. Catch it, then touch the flag on the landing pad.',
+    kicker: 'Current research', head: 'Research Lab', meta: 'Video, satellite and medical imaging · FDU',
+    body: () => `<h3>Active projects</h3>${RESEARCH.map(([t, s, c, p]) => item(t, badge(s, c), p)).join('')}
+      <p style="margin-top:12px;font-size:13px">Published papers and articles are in <b>The Library</b>, east of here.</p>` },
+  { id: 'campus', name: 'Campus', color: '#3b82f6', c: [-52, -50], r: 22, flag: [-52, -66], skills: { dev: 2, ai: 2, data: 2 },
+    challenge: 'Jump the ramp and stay airborne for 0.7 seconds, then take the flag across the quad.',
+    kicker: 'Education', head: 'Campus', meta: 'Fairleigh Dickinson University · Caucasus University',
+    body: () => `${rows([['<b>M.S. Computer Science</b> · accelerated 4+1 program', 'May 2027'], ["<b>B.S. Computer Science</b> · dual program, Honor's List", '2023 — 2026']])}
+      <h3>Coursework</h3>${tags(['Algorithms', 'Machine Learning', 'Deep Learning', 'Big Data Analytics', 'Computer Networks', 'Security Applications', 'Linear Algebra', 'Probability & Statistics'])}
+      <p style="margin-top:12px;font-size:13px">Organizations and events are at the <b>Community Hub</b>.</p>` },
+  { id: 'community', name: 'Community Hub', color: '#2563eb', c: [30, 28], r: 14,
+    kicker: 'Organizations & events', head: 'Community Hub', meta: 'Leadership, memberships, volunteering and events',
+    body: () => { const today = new Date(); today.setHours(0, 0, 0, 0);
+      return `<h3>Organizations</h3>${ORGS.map(([role, org, d, c, p]) => item(`${role} · ${org}`, `<span>${d}</span>`, p)).join('')}
+      <h3>Events & talks</h3>${rows(EVENTS.map(([n, d, r]) => [`${n} ${badge(day(d) >= today ? 'UPCOMING' : r, day(d) >= today ? '#16a34a' : roleC(r))}`, day(d).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })]))}`; } },
+  { id: 'workshop', name: 'Workshop', color: '#f97316', c: [64, 16], r: 22, flag: [74, 16], skills: { dev: 5, hw: 1, ai: 1, data: 1 },
+    challenge: 'Knock over the server rack, then take the flag behind it.',
+    kicker: 'Projects', head: 'Workshop', meta: 'Hackathon, coursework and personal projects',
+    body: () => PROJECTS.map(([t, d, p, tg, u]) => item(t, `<span>${d}</span>`, p, tags(tg) + (u ? `<a href="${u}" target="_blank">View on GitHub ↗</a>` : ''))).join('') },
+  { id: 'vault', name: 'Trophy Vault', color: '#ef4444', c: [-64, 16], r: 22, flag: [-74, 16], skills: { off: 3, cloud: 2 },
+    challenge: 'A firewall guards the vault. Break through it at full speed (boost or the truck helps), then take the flag.',
+    kicker: 'Certifications & awards', head: 'Trophy Vault', meta: `${CERTS.length} certifications · ${AWARDS.length} competition results`,
+    body: () => `<h3>Certifications</h3>${rows(CERTS)}<h3>Competitions</h3>${rows(AWARDS.map(([r, n, d]) => [`<b>${r}</b> · ${n}`, d]))}` },
+  { id: 'library', name: 'The Library', color: '#0891b2', c: [86, -22], r: 20,
+    kicker: 'Publications', head: 'The Library', meta: `${PAPERS.length} research papers · 6 citations · ${ARTICLES.length} articles · click a book to open it`,
+    body: () => `<div class="links" style="margin-top:0"><a class="primary" href="${LINKS.scholar}" target="_blank">Google Scholar profile ↗</a></div>
+      <h3>Research papers</h3>${PAPERS.map(([t, a, s, c, u]) => item(t, badge(s, c), a, u ? `<a href="${u}" target="_blank">Read the preprint (DOI) ↗</a>` : `<a href="${LINKS.scholar}" target="_blank">View on Google Scholar ↗</a>`)).join('')}
+      <h3>Articles</h3>${ARTICLES.map(([t, w, d, u]) => item(t, `<span>${d}</span>`, w, `<a href="${u}" target="_blank">Read the article ↗</a>`)).join('')}` },
+  { id: 'hof', name: 'Hall of Fame', color: '#d4a017', c: [-62, 64], r: 20,
+    kicker: 'Security Hall of Fame', head: 'Hall of Fame', meta: 'Recognized by 40+ organizations for responsible disclosure',
+    body: () => `<p>Each organization on this wall acknowledged a vulnerability I found and reported through its bug bounty or disclosure program.</p>
+      <h3>Organizations · ${state.coins.length}/${HOF.length} coins found</h3>
+      <div class="tags">${HOF.map(h => `<span style="${state.coins.includes(h) ? 'background:#fff3c4;color:#8a6500;font-weight:600' : ''}">${h}</span>`).join('')}<span>and 27 more</span></div>
+      <p style="margin-top:12px;font-size:13px">Collecting a gold coin lights up that organization's plaque.</p>` },
+  { id: 'contact', name: 'About & Contact', color: '#14b8a6', c: [0, 64], r: 22, flag: [0, 136], skills: { off: 1, ai: 1, cloud: 1, hw: 1, dev: 1, data: 1 },
+    challenge: 'Drive to the end of the pier to take the flag.',
+    kicker: 'About · CV · Contact', head: 'Daksh Khurana', meta: 'Teaneck, NJ · open to AI security, red teaming and ML research roles',
+    body: () => `<p>I'm a security engineer turned AI researcher. I started in bug bounties (40+ Halls of Fame), then tested LLMs, web, mobile and cloud systems as a penetration tester at Bright Security. Today I research deep learning for video, satellite and medical imaging at Fairleigh Dickinson University while completing my M.S. in Computer Science. I'm most interested in work where security and machine learning meet: AI security, LLM red teaming and trustworthy computer vision.</p>
+      <div class="links"><a class="primary" href="${LINKS.resume}" target="_blank">View CV ↗</a><a href="${LINKS.resume}" download="Daksh-Khurana-CV.pdf">Download CV</a><a href="${LINKS.email}">Email</a><a href="${LINKS.linkedin}" target="_blank">LinkedIn ↗</a><a href="${LINKS.scholar}" target="_blank">Google Scholar ↗</a></div>
+      <h3>CV at a glance</h3>
+      ${rows([['<b>Current</b> · Research Assistant & Teaching Assistant, FDU', 'Sep 2025 —'],
+              ['<b>Previous</b> · Penetration Tester, Bright Security', '2024 — 2025'],
+              ['<b>Education</b> · M.S. & B.S. Computer Science, FDU', 'May 2027'],
+              ['<b>Research</b> · 4 papers, 2 published at IEEE ISEC', '2026'],
+              ['<b>Certifications</b> · CRTE, eWPTXv2, AWS Security, AZ-500', '15 total'],
+              ['<b>Recognition</b> · Security Hall of Fame', '40+ orgs'],
+              ['<b>Leadership</b> · Chair, IEEE CIS & AP-S Student Chapter', 'Nov 2026 —']])}
+      <h3>Core skills</h3>${tags(['Computer Vision', 'Vision-Language Models', 'PyTorch', 'Python', 'Full-Stack & AI Agents', 'Penetration Testing', 'LLM Red Teaming', 'Cloud Security'])}
+      <h3>Elsewhere</h3><div class="links" style="margin-top:0"><a href="${LINKS.gh1}" target="_blank">GitHub ↗</a><a href="${LINKS.gh2}" target="_blank">GitHub (projects) ↗</a><a href="classic.html">Classic portfolio</a></div>
+      <h3>Languages</h3><p>English and Hindi (native) · German (working proficiency)</p>` },
+  { id: 'root', name: 'Root Hill', color: '#1f2430', c: [50, 62], r: 16, flag: [50, 62], hidden: true,
+    challenge: 'The root flag appears here once you hold all six area flags. Drive up the ramp on the west side.',
+    kicker: 'Secret', head: 'Root Hill', meta: 'The highest point on the island',
+    body: () => `<p>${flagsHeld() === 6 ? 'The <b>root flag</b> is waiting at the top.' : `Capture all six area flags to reveal the root flag here (${flagsHeld()}/6).`}</p>` },
+];
+const AREA = Object.fromEntries(AREAS.map(a => [a.id, a]));
+function skillProgress() {
+  const got = Object.fromEntries(SKILLS.map(s => [s.key, 0])), max = { ...got };
+  AREAS.filter(a => a.flag && !a.hidden).forEach(a => Object.entries(a.skills || {}).forEach(([k, v]) => { max[k] += v; if (state.flags.includes(a.id)) got[k] += v; }));
+  return { got, max };
+}
+const skillBars = () => { const { got, max } = skillProgress();
+  return SKILLS.map(s => `<div class="skill"><div class="top">${s.name}<span>LV ${got[s.key]}/${max[s.key]}</span></div><div class="bar" style="--c:${s.color}"><i style="width:${got[s.key] / max[s.key] * 100}%"></i></div>${tags(s.list)}</div>`).join(''); };
+const FLAG_AREAS = AREAS.filter(a => a.flag && !a.hidden);
+const MAX_PTS = FLAG_AREAS.length * PTS.flag + HOF.length * PTS.coin + PTS.root;
 
-                <!-- Job 3: Core Team Member -->
-                <div class="relative">
-                    <div class="absolute -left-[37px] top-1.5 w-3 h-3 bg-[#050505] border-2 border-gray-500 rounded-full"></div>
-                    <div class="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2">
-                        <h3 class="text-xl font-bold text-white">Core Team Member</h3>
-                        <span class="font-mono text-xs text-gray-500">Mar. 2024 — Aug. 2025</span>
-                    </div>
-                    <p class="text-sm text-gray-400 font-mono mb-3">AutoSecurityy | India</p>
-                    <ul class="list-disc list-outside ml-4 text-gray-400 text-sm space-y-1">
-                        <li>Conducted in-depth research on emerging automobile security threats and industry trends to inform strategic initiatives and content creation.</li>
-                        <li>Created targeted educational content- including articles, videos, and infographics- aimed at raising cybersecurity awareness among consumers and automotive professionals.</li>
-                    </ul>
-                </div>
-                
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const SAVE_KEY = 'd4mr0-ctf-v1';
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const state = { flags: [], coins: [], root: false, gates: [], drone: false, rack: false, firewall: false, jumped: false, ach: [], playSec: 0, clearSec: 0, ride: 'bike', paint: 0, night: false, honks: 0, wrecked: 0 };
+let vid;
+try { Object.assign(state, JSON.parse(localStorage.getItem(SAVE_KEY) || '{}')); vid = localStorage.getItem('d4mr0-vid') || uid(); localStorage.setItem('d4mr0-vid', vid); } catch (e) { vid = uid(); }
+const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} };
+const flagsHeld = () => state.flags.length;
+const points = () => state.flags.length * PTS.flag + state.coins.length * PTS.coin + (state.root ? PTS.root : 0);
+const level = () => LEVELS.filter(l => points() >= l.pts).length;
+const has = k => level() >= LEVELS.findIndex(l => l.key === k) + 1;
+const flagEmoji = cc => /^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '🌐';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-                <!-- Job 4: Cloud Security Intern -->
-                <div class="relative">
-                    <div class="absolute -left-[37px] top-1.5 w-3 h-3 bg-[#050505] border-2 border-gray-500 rounded-full"></div>
-                    <div class="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2">
-                        <h3 class="text-xl font-bold text-white">Cloud Security Intern</h3>
-                        <span class="font-mono text-xs text-gray-500">Nov. 2023 — Jan. 2024</span>
-                    </div>
-                    <p class="text-sm text-gray-400 font-mono mb-3">Virtually Testing Foundation | CA</p>
-                    <ul class="list-disc list-outside ml-4 text-gray-400 text-sm space-y-1">
-                        <li>Utilized AWS CloudTrail, CloudWatch, AWS Cognito, Azure Active Directory, and Microsoft Sentinel to secure cloud infrastructures.</li>
-                        <li>Participated in practical labs, gaining hands-on experience in threat detection and mitigation while developing strong soft skills.</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
+/* =====================================================================
+   RENDERER & SCENE
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const canvas = $('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const labelRenderer = new CSS2DRenderer({ element: $('labels') });
+labelRenderer.setSize(innerWidth, innerHeight);
 
-        <!-- 3. PROJECTS -->
-        <section id="research" class="mb-24">
-            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
-                <h2 class="text-3xl font-bold text-white">Research & Code</h2>
-                <span class="font-mono text-xs text-gray-500 hidden md:block">/home/daksh/projects</span>
-            </div>
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 900);
+const DAY = { top: new THREE.Color(0x7ec4e6), bottom: new THREE.Color(0xffe3c2), fog: new THREE.Color(0xd6ecf0), sun: 2.4, hemi: 1.15 };
+const NIGHT = { top: new THREE.Color(0x0b1430), bottom: new THREE.Color(0x3a2e5c), fog: new THREE.Color(0x1d2140), sun: 0.25, hemi: 0.35 };
+scene.fog = new THREE.Fog(DAY.fog.clone(), 140, 380);
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Project 1: LLM Security Evaluation -->
-                 <!-- Project 3: A Meta-Analysis on Early Detection of Skin Cancer using Graph Neural Networks. -->
-    <a href="#" class="terminal-box p-6 block group">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="trophy" class="text-blue-400"></i>
-                        <span class="text-[10px] font-mono border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded">Fall 2025</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">MLB MVP Prediction Using Machine Learning and Big Data Analytics</h3>
-                    <p class="text-sm text-gray-400 mb-4">Built a data-driven web application to predict MLB MVP outcomes using Python, Flask, scikit-learn, and web scraping (BeautifulSoup), applying regression and ensemble models including Linear Regression, Ridge/Lasso, Random Forest, Gradient Boosting, and cross-validation for performance evaluation.</p>
-                    <div class="text-xs font-mono text-gray-600">#ML #Scikit-Learn #BasketBall</div>
-                </a>
-                
-                
-                <a href="#" class="terminal-box p-6 block group">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="activity" class="text-red-400"></i>
-                        <span class="text-[10px] font-mono border border-red-500/30 text-red-400 px-2 py-0.5 rounded">Fall 2025</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Meta-Analysis on Image Classification Using GNN</h3>
-                    <p class="text-sm text-gray-400 mb-4">Architected a GNN model to classify skin disease images. Conducting literature review for peer-reviewed publication.</p>
-                    <div class="text-xs font-mono text-gray-600">#GNN #PyTorch #BigDataAnalytics</div>
-                </a>
-                <a href="#" class="terminal-box p-6 block group">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="file-code" class="text-purple-400"></i>
-                        <span class="text-[10px] font-mono border border-purple-500/30 text-purple-400 px-2 py-0.5 rounded">Fall 2025</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Comparative Security Evaluation: Human vs. LLM Applications</h3>
-                    <p class="text-sm text-gray-400 mb-4">Independent study comparing vulnerability density in human-written vs. LLM-generated code. Developing security benchmarks.</p>
-                    <div class="text-xs font-mono text-gray-600">#LLMSecurity #CodeAnalysis</div>
-                </a>
-                
-                <a href="#" target="_blank" class="terminal-box p-6 block group">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="database" class="text-pink-400"></i>
-                        <span class="text-[10px] font-mono border border-yellow-500/30 text-pink-400 px-2 py-0.5 rounded">Fall 2025</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">EasyTUS: Efficient Table Union Search (CSCI 3331)</h3>
-                    <p class="text-sm text-gray-400 mb-4">Reviewed and analyzed the EasyTUS research paper and implemented a PoC demonstrating fuzzy table-matching.</p>
-                    <div class="text-xs font-mono text-gray-600">#PL/SQL #AdvanceDatabases #ReviewPresentation </div>
-                </a>
-<!-- Project 5: Smart Agriculture System (ML) -->
-                <a href="https://github.com/n16htb0t/Ml-Project-Agrimart" target="_blank" class="terminal-box p-6 block group">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="sprout" class="text-lime-400"></i>
-                        <span class="text-[10px] font-mono border border-lime-500/30 text-lime-400 px-2 py-0.5 rounded">Spring 2025</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Smart Agriculture Platform: ML</h3>
-                    <p class="text-sm text-gray-400 mb-4">AI-driven farming system with crop/fertilizer recommendations (Random Forest, Decision Tree) integrating weather and price trends.</p>
-                    <div class="text-xs font-mono text-gray-600">#Scikit-Learn #IoT Sensors</div>
-                </a>
-                <!-- Project 2: Embedded Security with AI -->
-                <a href="https://github.com/n16htb0t/EmbeddedAI/" target="_blank" class="terminal-box p-6 block group">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="cpu" class="text-yellow-400"></i>
-                        <span class="text-[10px] font-mono border border-yellow-500/30 text-yellow-400 px-2 py-0.5 rounded">Jun 2024</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Embedded Security with AI using StreamLit</h3>
-                    <p class="text-sm text-gray-400 mb-4">Automated recon tool using YOLO and LLMs to analyze hardware datasheets and FCCID information.</p>
-                    <div class="text-xs font-mono text-gray-600">#HardwareSecurity #YOLO #Python</div>
-                </a>
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false, fog: false,
+  uniforms: { top: { value: DAY.top.clone() }, bottom: { value: DAY.bottom.clone() } },
+  vertexShader: 'varying float h; void main(){ h = normalize(position).y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
+  fragmentShader: 'uniform vec3 top; uniform vec3 bottom; varying float h; void main(){ gl_FragColor = vec4(mix(bottom, top, smoothstep(-0.02, 0.55, h)), 1.); }',
+});
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), skyMat));
+const hemi = new THREE.HemisphereLight(0xfff4e0, 0x6a8f5a, DAY.hemi); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0d8, DAY.sun);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -55, right: 55, top: 55, bottom: -55, near: 1, far: 170 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+scene.add(sun, sun.target);
+
+let seed = 7;
+const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+const M = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, flatShading: true, ...o });
+const mesh = (geo, mat, x = 0, y = 0, z = 0, cast = true) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = cast; m.receiveShadow = true; return m; };
+const add = (...o) => { o.forEach(x => scene.add(x)); return o[0]; };
+
+/* =====================================================================
+   TERRAIN: island, sand, water, roads, ramps, hill, pier
+   ===================================================================== */
+const shoreR = t => 104 + 7 * Math.sin(3 * t + 1) + 4 * Math.sin(5 * t + 2) + 2.5 * Math.sin(9 * t + 0.5);
+const SAND = 8;
+const PIER = { x: 3.6, z0: 96, z1: 142 };
+const HILL = { x: 50, z: 62, r: 11, h: 4.2 };
+const islandShape = extra => { const s = new THREE.Shape(); for (let i = 0; i <= 160; i++) { const t = i / 160 * Math.PI * 2, r = shoreR(t) + extra; i ? s.lineTo(r * Math.cos(t), -r * Math.sin(t)) : s.moveTo(r * Math.cos(t), -r * Math.sin(t)); } return s; };
+const flatGeo = shape => { const g = new THREE.ShapeGeometry(shape, 4); g.rotateX(-Math.PI / 2); return g; };
+let foamMesh;
+{
+  const cliff = new THREE.ExtrudeGeometry(islandShape(SAND), { depth: 6, bevelEnabled: false, curveSegments: 4 });
+  cliff.rotateX(-Math.PI / 2); cliff.translate(0, -6, 0);
+  const c = new THREE.Mesh(cliff, [M(0xf3dfae), M(0xc9a87a)]); c.receiveShadow = true; add(c);
+  const grass = new THREE.Mesh(flatGeo(islandShape(0)), M(0x9fd47e)); grass.position.y = 0.02; grass.receiveShadow = true; add(grass);
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshStandardMaterial({ color: 0x4fb6d4, roughness: 0.15, metalness: 0.05 }));
+  water.rotation.x = -Math.PI / 2; water.position.y = -1.4; water.receiveShadow = true; add(water);
+  const foamShape = islandShape(SAND + 4); foamShape.holes.push(islandShape(SAND - 0.5));
+  foamMesh = new THREE.Mesh(flatGeo(foamShape), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, depthWrite: false }));
+  foamMesh.position.y = -1.3; add(foamMesh);
+}
+
+// Ramps: local +z runs uphill from 0 to h over len, then drops off (that's the jump)
+const RAMPS = [
+  { x: -52, z: -30, a: Math.PI, len: 10, w: 7, h: 2.4 },
+  { x: 14, z: 8, a: Math.PI / 2, len: 8, w: 6, h: 1.6 },
+  { x: HILL.x - HILL.r - 16, z: HILL.z, a: Math.PI / 2, len: 16, w: 7, h: HILL.h, hill: true },
+];
+function rampLocal(r, x, z) { const dx = x - r.x, dz = z - r.z; return [dx * Math.sin(r.a) + dz * Math.cos(r.a), dx * Math.cos(r.a) - dz * Math.sin(r.a)]; }
+function wedge(len, w, h) {
+  const p = [-w / 2, 0, 0, w / 2, 0, 0, -w / 2, 0, len, w / 2, 0, len, -w / 2, h, len, w / 2, h, len];
+  const idx = [0, 4, 1, 1, 4, 5, 2, 3, 4, 3, 5, 4, 0, 2, 4, 1, 5, 3, 0, 1, 2, 1, 3, 2];
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setIndex(idx);
+  const ng = g.toNonIndexed(); ng.computeVertexNormals(); return ng;
+}
+RAMPS.forEach(r => {
+  const m = mesh(wedge(r.len, r.w, r.h), M(r.hill ? 0xe6d3a8 : 0xff8a5c, { side: THREE.DoubleSide }), r.x, 0, r.z);
+  m.rotation.y = r.a; add(m);
+  if (!r.hill) for (let i = 1; i < 4; i++) { const s = mesh(new THREE.BoxGeometry(r.w * 0.6, 0.05, 0.4), M(0xffffff), 0, r.h * (i / 4) + 0.04, r.len * i / 4, false); s.rotation.x = -Math.atan2(r.h, r.len); m.add(s); }
+});
+add(mesh(new THREE.CylinderGeometry(HILL.r, HILL.r + 1.5, HILL.h, 24), M(0xb8d98f), HILL.x, HILL.h / 2, HILL.z));
+
+function groundAt(x, z) {
+  let h = 0;
+  const onPier = Math.abs(x) < PIER.x && z > PIER.z0 && z < PIER.z1;
+  if (Math.hypot(x, z) > shoreR(Math.atan2(-z, x)) + SAND && !onPier) h = -3;
+  if (onPier) h = 0.4;
+  if (Math.hypot(x - HILL.x, z - HILL.z) < HILL.r) h = HILL.h;
+  for (const rp of RAMPS) { const [u, v] = rampLocal(rp, x, z); if (u >= 0 && u <= rp.len && Math.abs(v) <= rp.w / 2) h = Math.max(h, rp.h * u / rp.len); }
+  return h;
+}
+
+// Roads: spokes from spawn + a loop linking every area
+const LOOP = [[0, -100], [30, -80], [52, -50], [72, -16], [64, 16], [46, 38], [HILL.x - HILL.r - 16, HILL.z], [0, 64], [-36, 62], [-64, 16], [-72, -16], [-52, -50], [-30, -80]];
+const SEGS = [];
+LOOP.forEach((p, i) => SEGS.push([p, LOOP[(i + 1) % LOOP.length]]));
+[[0, -26, 7, -30], [0, 0, 86, -22], [72, -16, 86, -22], [0, 0, 22, 20.5], [-36, 62, -50, 63], [0, -14, 0, -100], [0, 0, 52, -50], [0, 0, -52, -50], [0, 0, 64, 16], [0, 0, -64, 16], [0, 0, 0, PIER.z0 + 2]].forEach(([a, b, c, d]) => SEGS.push([[a, b], [c, d]]));
+const ROAD_W = 7;
+{
+  const roadM = M(0xfff1d6), edgeM = M(0xe8c99a);
+  SEGS.forEach(([[x1, z1], [x2, z2]]) => {
+    const len = Math.hypot(x2 - x1, z2 - z1), a = Math.atan2(x2 - x1, z2 - z1);
+    [[ROAD_W + 1.2, edgeM, 0.03], [ROAD_W, roadM, 0.05]].forEach(([w, m, y]) => {
+      const g = new THREE.PlaneGeometry(w, len); g.rotateX(-Math.PI / 2);
+      const r = mesh(g, m, (x1 + x2) / 2, y, (z1 + z2) / 2, false); r.rotation.y = a; add(r);
+    });
+  });
+  [...LOOP, [0, 0]].forEach(([x, z]) => { const d = mesh(new THREE.CircleGeometry(ROAD_W / 2 + 0.6, 24), roadM, x, 0.06, z, false); d.rotation.x = -Math.PI / 2; add(d); });
+  const plaza = mesh(new THREE.CircleGeometry(14, 40), M(0xffe9c7), 0, 0.045, 0, false); plaza.rotation.x = -Math.PI / 2; add(plaza);
+}
+const segDist = (x, z, [[x1, z1], [x2, z2]]) => { const dx = x2 - x1, dz = z2 - z1, t = Math.max(0, Math.min(1, ((x - x1) * dx + (z - z1) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - x1 - t * dx, z - z1 - t * dz); };
+const onRoad = (x, z) => SEGS.some(s => segDist(x, z, s) < ROAD_W / 2 + 0.5);
+
+/* =====================================================================
+   LANDMARKS
+   ===================================================================== */
+const colliders = [];
+const block = (x, z, r, h = 20) => colliders.push({ x, z, r, h });
+
+// A sign with crisp canvas text that faces the road
+const clickables = [];
+const clickable = (obj, label, act) => { obj.userData.click = { label, act }; clickables.push(obj); return obj; };
+const boardSpots = [];
+// Focus spots: walk up to one and press E to zoom the camera onto it
+const focusables = [];
+function addFocus({ label, sub, T, C, spot, act, color }) { focusables.push({ key: 'f' + focusables.length, label, sub, T, C, spot, act, color }); }
+function board(x, z, toward, { kicker, title, sub, line, color, click }, w = 7.5, h = 4.2) {
+  const rot = Array.isArray(toward) ? Math.atan2(toward[0] - x, toward[1] - z) : toward;   // face a point (where players approach from)
+  boardSpots.push([x, z], [x + Math.sin(rot) * 8, z + Math.cos(rot) * 8]);   // the board and its viewing area stay tree-free
+  const c = document.createElement('canvas'); c.width = 1024; c.height = Math.round(1024 * h / w);
+  const ctx = c.getContext('2d');
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const draw = () => {
+    ctx.fillStyle = '#fffdf8'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = color; ctx.fillRect(0, 0, c.width, 26);
+    ctx.font = '600 34px JetBrains Mono, monospace'; ctx.fillText(kicker.toUpperCase(), 54, 104);
+    ctx.fillStyle = '#1f2430'; ctx.font = '700 72px Space Grotesk, sans-serif'; ctx.fillText(title, 50, 192);
+    ctx.fillStyle = '#4b5263'; ctx.font = '500 40px Space Grotesk, sans-serif'; ctx.fillText(sub, 54, 258);
+    if (line) { ctx.fillStyle = '#8a91a1'; ctx.font = '500 34px Space Grotesk, sans-serif'; ctx.fillText(line, 54, 324); }
+    if (click) { ctx.font = '700 30px JetBrains Mono, monospace'; const tw = ctx.measureText('CLICK ↗').width + 36, bx = c.width - tw - 34, by = c.height - 76;
+      ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(bx, by, tw, 50, 25); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText('CLICK ↗', bx + 18, by + 36); }
+    tex.needsUpdate = true;
+  };
+  draw(); document.fonts?.ready.then(draw);
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot;
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+  face.position.set(0, h / 2 + 1.4, 0.16); g.add(face);
+  if (click) clickable(face, click[0], click[1]);
+  { const nx = Math.sin(rot), nz = Math.cos(rot), T = new THREE.Vector3(x, h / 2 + 1.4, z);
+    addFocus({ label: title, sub: kicker, color, T, C: T.clone().add(new THREE.Vector3(nx * (w * 1.1 + 2), 0.8, nz * (w * 1.1 + 2))), spot: [x + nx * 7, z + nz * 7], act: click?.[1] }); }
+  g.add(mesh(new THREE.BoxGeometry(w + 0.3, h + 0.3, 0.3), M(0x7a5c43), 0, h / 2 + 1.4, 0));
+  [-w / 2 + 0.6, w / 2 - 0.6].forEach(px => g.add(mesh(new THREE.BoxGeometry(0.3, 1.6, 0.3), M(0x7a5c43), px, 0.7, 0)));
+  add(g);
+  [-w / 2 + 0.6, w / 2 - 0.6].forEach(px => block(x + Math.cos(rot) * px, z - Math.sin(rot) * px, 0.4));
+  return g;
+}
+
+// Painted road hints, readable when driving toward (tx, tz)
+function roadHint(x, z, tx, tz, text, color) {
+  const tex = textTex(1024, 220, (ctx, wrap, w, h) => {
+    ctx.fillStyle = 'rgba(255,255,255,.88)'; ctx.beginPath(); ctx.roundRect(8, 8, w - 16, h - 16, 60); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 10; ctx.stroke();
+    let fs = 84; do { ctx.font = `700 ${fs}px Space Grotesk, sans-serif`; fs -= 4; } while (ctx.measureText(text).width > w - 90 && fs > 30);   // auto-fit
+    ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, w / 2, h / 2 + 4);
+  });
+  const g = new THREE.PlaneGeometry(6.6, 2.0); g.rotateX(-Math.PI / 2);   // stretched along the road so it reads well at a low angle
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }));
+  m.position.set(x, 0.08, z); m.rotation.y = Math.atan2(tx - x, tz - z) - Math.PI; m.renderOrder = 2; add(m);
+}
+roadHint(0, -9, 0, -60, 'Signs and books are clickable', '#ff6b35');
+// Road directions at the start: one painted label per road, pointing the way
+[['career', 0, -100, '▲ Career Road'], ['research', 52, -50, '▲ Research Lab'], ['library', 86, -22, '▲ The Library'], ['workshop', 64, 16, '▲ Workshop · Projects'],
+ ['community', 30, 28, '▲ Community Hub'], ['vault', -64, 16, '▲ Trophy Vault'], ['campus', -52, -50, '▲ Campus'], ['contact', 0, 98, '▲ About & Contact · CV']].forEach(([id, tx, tz, text]) => {
+  const d = id === 'career' ? 19 : 17, l = Math.hypot(tx, tz);
+  roadHint(tx / l * d, tz / l * d, tx, tz, text, AREA[id].color);
+});
+roadHint(72, -18.4, 86, -22, 'Click a book to open it', '#0891b2');
+
+// Spawn: welcome board
+board(-8, -17, [0, 6], { kicker: 'Welcome · d4mr0', title: 'Daksh Khurana', sub: 'AI research · security · software', line: 'Explore freely · press M for the map', color: '#ff6b35', click: ['About me ↗', () => areaDrawer(AREA.spawn)] }, 9, 4.6);
 
 
-                <a href="#" class="terminal-box p-6 block group">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="Radio" class="text-purple-400"></i>
-                        <span class="text-[10px] font-mono border border-blue-500/30 text-purple-400 px-2 py-0.5 rounded">Fall 2023</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Signals in the Wild: Exploring RF Systems using HackRF One</h3>
-                    <p class="text-sm text-gray-400 mb-4">Developed and delivered a live demo showcasing ADS-B aircraft tracking, RF signal decoding, and replay attacks on low-frequency devices using HackRF One, GNU Radio, and Python.</p>
-                    <div class="text-xs font-mono text-gray-600">#RadioFrequency #SDRs #FlightTracker</div>
-                </a>
-                
-                <!-- Project 4: Teen Sage Mobile App -->
-                <a href="https://github.com/1n1t6Sh3ll/TeenSage/" target="_blank" class="terminal-box p-6 block group">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="smartphone" class="text-green-400"></i>
-                        <span class="text-[10px] font-mono border border-green-500/30 text-green-400 px-2 py-0.5 rounded">Dec 2022</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Teen Sage (Mobile Application)</h3>
-                    <p class="text-sm text-gray-400 mb-4">Developed a mobile application focused on adolescent mental health and sex education.</p>
-                    <div class="text-xs font-mono text-gray-600">#Flutter #GCP #Firebase</div>
-                </a>
+// Career Road: 5 gates with boards
+const GATE_Z = [-24, -44, -64, -84];
+JOBS.forEach((j, i) => {
+  const z = GATE_Z[i], col = new THREE.Color(j.color);
+  const arch = new THREE.Group(); arch.position.set(0, 0, z);
+  [-ROAD_W / 2 - 0.4, ROAD_W / 2 + 0.4].forEach(x => { arch.add(mesh(new THREE.BoxGeometry(0.6, 5, 0.6), M(col), x, 2.5, 0)); block(x, z, 0.45); });
+  arch.add(mesh(new THREE.BoxGeometry(ROAD_W + 1.6, 0.7, 0.7), M(col), 0, 5.1, 0));
+  add(arch);
+  // sides chosen so boards stay clear of the Skill Tree (right of gate 2) and the loop road (top)
+  const side = [1, -1, 1, -1][i], bz = z + [2, -2, -2, 3][i];
+  board(side * 10.5, bz, [0, bz + 30], { kicker: j.date, title: j.role, sub: j.org.split(' · ')[0], line: j.line, color: j.color, click: [`${j.role} · details`, () => jobDrawer(j)] });
+});
 
-                
+// Research Lab: dome, antenna, dish, landing pad, drone
+const LAB = AREA.research.c;
+{
+  const [x, z] = LAB;
+  add(mesh(new THREE.SphereGeometry(6, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M(0xece6ff), x + 15, 0, z - 11)); block(x + 15, z - 11, 6.4);
+  add(mesh(new THREE.CylinderGeometry(6.2, 6.2, 0.6, 24), M(0x8b5cf6), x + 15, 0.3, z - 11));
+  add(mesh(new THREE.CylinderGeometry(0.15, 0.15, 7, 6), M(0x9aa3b2), x + 15, 9, z - 11));
+  const dish = mesh(new THREE.SphereGeometry(2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 3), M(0xffffff, { side: THREE.DoubleSide }), x - 15, 3.5, z - 9); dish.rotation.x = -0.9; add(dish);
+  add(mesh(new THREE.CylinderGeometry(0.3, 0.5, 3, 8), M(0x9aa3b2), x - 15, 1.5, z - 9)); block(x - 15, z - 9, 1.6);
+  add(mesh(new THREE.CylinderGeometry(4, 4, 0.2, 32), M(0x3b3f4e), x, 0.1, z, false));
+  const H = mesh(new THREE.TorusGeometry(2.6, 0.18, 6, 32), M(0xffffff), x, 0.22, z, false); H.rotation.x = Math.PI / 2; add(H);
+  board(x - 4, z + 15, [26, -25], { kicker: 'Research Lab', title: 'AI Research', sub: 'Video · satellite · medical imaging', line: '4 active research projects', color: '#8b5cf6', click: ['Research Lab', () => areaDrawer(AREA.research)] });
+}
+const drone = (() => {
+  const g = new THREE.Group(), props = [];
+  g.add(mesh(new THREE.BoxGeometry(1.2, 0.35, 1.2), M(0x1f2430)));
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { g.add(mesh(new THREE.BoxGeometry(0.12, 0.1, 1), M(0x4b5263), a * 0.55, 0.1, b * 0.55)); const p = mesh(new THREE.BoxGeometry(1.1, 0.04, 0.15), M(0xef4444), a * 0.8, 0.25, b * 0.8); g.add(p); props.push(p); });
+  g.add(mesh(new THREE.SphereGeometry(0.18, 8, 6), M(0xef4444, { emissive: 0xef4444, emissiveIntensity: 1 }), 0, -0.2, 0.55));
+  add(g); g.userData.props = props; return g;
+})();
 
-                <!-- Project 6: Fleet Management DB -->
-                
-                
+// Campus: hall with columns, clock tower, quad
+{
+  const [x, z] = AREA.campus.c;
+  const hall = new THREE.Group(); hall.position.set(x - 15, 0, z - 4);
+  hall.add(mesh(new THREE.BoxGeometry(10, 6, 9), M(0xf2e6d6), 0, 3, 0));
+  hall.add(mesh(new THREE.BoxGeometry(11, 0.8, 10), M(0x3b82f6), 0, 6.4, 0));
+  for (let i = -2; i <= 2; i++) hall.add(mesh(new THREE.CylinderGeometry(0.3, 0.3, 5, 8), M(0xffffff), i * 2, 2.5, 5));
+  add(hall); block(x - 15, z - 4, 7);
+  add(mesh(new THREE.BoxGeometry(3, 14, 3), M(0xe8d9c5), x - 12, 7, z - 14)); block(x - 12, z - 14, 2.4);
+  add(mesh(new THREE.ConeGeometry(2.6, 3, 4), M(0x3b82f6), x - 12, 15.5, z - 14)).rotation.y = Math.PI / 4;
+  add(mesh(new THREE.CircleGeometry(1, 20), M(0xffffff), x - 12, 11, z - 12.45, false));
+  const quad = mesh(new THREE.CircleGeometry(9, 32), M(0x7fc46a), x, 0.04, z - 8, false); quad.rotation.x = -Math.PI / 2; add(quad);
+  board(x + 20, z + 2, [-26, -25], { kicker: 'Campus · FDU', title: 'Education', sub: 'B.S. → M.S. Computer Science', line: 'Degrees and coursework', color: '#3b82f6', click: ['Campus', () => areaDrawer(AREA.campus)] });
+}
 
-                <a href="#" class="terminal-box p-6 block group">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="Car" class="text-green-400"></i>
-                        <span class="text-[10px] font-mono border border-green-500/30 text-green-400 px-2 py-0.5 rounded">Dec 2020</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Facial Landmark & Object Detection (Hackathon Project)</h3>
-                    <p class="text-sm text-gray-400 mb-4">Recreated a TensorFlow.js project from a YouTube tutorial featuring real-time facial landmark detection, “Miss Happening” capture, and object recognition; showcased at a hackathon to demonstrate practical computer vision applications.</p>
-                    <div class="text-xs font-mono text-gray-600">#OpenCV #tensorflow</div>
-                </a>
-            </div>
-        </section>
+// Workshop: garage (server rack + barrels are physics props below)
+{
+  const [x, z] = AREA.workshop.c;
+  const g = new THREE.Group(); g.position.set(x + 18, 0, z - 10); g.rotation.y = -Math.PI / 2;   // straight ahead from spawn, door facing the plaza
+  g.add(mesh(new THREE.BoxGeometry(12, 6, 8), M(0xd9dde4), 0, 3, 0));
+  g.add(mesh(new THREE.BoxGeometry(12.4, 0.6, 8.4), M(0xf97316), 0, 6.2, 0));
+  g.add(mesh(new THREE.BoxGeometry(7, 4.2, 0.1), M(0x9aa3b2), 0, 2.1, 4.05));
+  for (let i = 0; i < 6; i++) g.add(mesh(new THREE.BoxGeometry(7, 0.08, 0.12), M(0x7b8494), 0, 0.5 + i * 0.7, 4.1));
+  add(g); block(x + 18, z - 10, 7);
+  board(x - 6, z + 14, [32, 8], { kicker: 'Workshop', title: 'Projects', sub: 'Hackathons · coursework · personal', line: `${PROJECTS.length} projects inside`, color: '#f97316', click: ['Projects', () => areaDrawer(AREA.workshop)] });
+}
 
-        <!-- 4. ARSENAL (SKILLS) -->
-        <section id="skills" class="mb-24">
-            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
-                <h2 class="text-3xl font-bold text-white">Neural Arsenal</h2>
-                <span class="font-mono text-xs text-gray-500 hidden md:block">/etc/skills</span>
-            </div>
+// Trophy Vault: vault with round door, enclosed courtyard sealed by a firewall
+{
+  const [x, z] = AREA.vault.c;
+  const g = new THREE.Group(); g.position.set(x - 16, 0, z);
+  g.add(mesh(new THREE.BoxGeometry(8, 8, 14), M(0x9aa3b2), 0, 4, 0));
+  g.add(mesh(new THREE.BoxGeometry(8.4, 0.6, 14.4), M(0xef4444), 0, 8.3, 0));
+  const door = mesh(new THREE.CylinderGeometry(3, 3, 0.6, 32), M(0xf5b301, { metalness: 0.6, roughness: 0.3 }), 4.2, 3.6, 0); door.rotation.z = Math.PI / 2; g.add(door);
+  const wheelM = mesh(new THREE.TorusGeometry(1.4, 0.15, 6, 20), M(0x8a6500), 4.55, 3.6, 0); wheelM.rotation.y = Math.PI / 2; g.add(wheelM);
+  add(g); block(x - 16, z - 4, 5); block(x - 16, z + 4, 5);
+  // hedges on both sides of the courtyard so the firewall is the only way in
+  [-6, 6.4].forEach(dz => {
+    add(mesh(new THREE.BoxGeometry(8, 2, 1.2), M(0x3f9a4f), x - 9, 1, z + dz));
+    for (let k = 0; k <= 6; k++) block(x - 5 - k * 1.33, z + dz, 0.9, 2.2);
+  });
+  board(x + 16, z + 6, [-32, 8], { kicker: 'Trophy Vault', title: 'Certs & Awards', sub: '15 certifications · 7 competitions', line: 'Hall of Fame: further south', color: '#ef4444', click: ['Certs & awards', () => areaDrawer(AREA.vault)] });
+}
 
-            <div class="grid md:grid-cols-4 gap-8 text-sm">
-                <div>
-                    <h4 class="font-mono text-red-400 mb-4 border-b border-red-500/20 pb-1">OFFENSIVE</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li>Web/Mobile VAPT</li>
-                        <li>Active Directory</li>
-                        <li>Burp Suite Pro, Metasploit, Sqlmap</li>
-                        <li>Vulnerability Management</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-mono text-cyan-400 mb-4 border-b border-cyan-500/20 pb-1">CLOUD/INFRA</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li>AWS (IAM/S3/CloudTrail)</li>
-                        <li>Azure Security, GCP</li>
-                        <li>Network Security, Endpoint Security</li>
-                        <li>Radio Hacking</li>
-                        <li>Wireshark, Splunk</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-mono text-purple-400 mb-4 border-b border-purple-500/20 pb-1">AI/ENGINEERING</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li>Python, C/C++, JavaScript</li>
-                        <li>TensorFlow/PyTorch, LLM/Langchain</li>
-                        <li>Big Data Analytics, SQL/NoSQL</li>
-                        <li>Flutter, Solidity, Bash Scripting</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-mono text-yellow-400 mb-4 border-b border-yellow-500/20 pb-1">HARDWARE/IOT</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li>Firmware Testing, Binwalk</li>
-                        <li>ARM & x86 Assembly</li>
-                        <li>Binary Exploitation, UART, JTAG</li>
-                        <li>IoT Security, CANbus, Modbus</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
+// Contact Pier: board, deck, lighthouse on a rock
+{
+  const [x, z] = AREA.contact.c;
+  board(x + 12, z - 10, [0, 40], { kicker: 'About & Contact', title: "Let's talk", sub: 'Intro · CV · email · LinkedIn', line: 'Flag at the end of the pier', color: '#14b8a6', click: ['About me & CV', () => areaDrawer(AREA.contact)] });
+  add(mesh(new THREE.BoxGeometry(PIER.x * 2, 0.4, PIER.z1 - PIER.z0), M(0xb07a4f), 0, 0.2, (PIER.z0 + PIER.z1) / 2));
+  for (let zz = PIER.z0 + 4; zz < PIER.z1; zz += 6) [-1, 1].forEach(s => add(mesh(new THREE.CylinderGeometry(0.25, 0.25, 3, 6), M(0x8a5a36), s * (PIER.x - 0.2), -1, zz)));
+  add(mesh(new THREE.DodecahedronGeometry(4, 0), M(0xa8a29e), 0, -1.2, PIER.z1 + 4));
+  const lh = new THREE.Group(); lh.position.set(0, 1.2, PIER.z1 + 4);
+  for (let i = 0; i < 4; i++) lh.add(mesh(new THREE.CylinderGeometry(2 - i * 0.25, 2.2 - i * 0.25, 2.6, 16), M(i % 2 ? 0xef4444 : 0xffffff), 0, 1.3 + i * 2.6, 0));
+  lh.add(mesh(new THREE.CylinderGeometry(1.2, 1.2, 1.4, 12), M(0xfff4c2, { emissive: 0xffd36b, emissiveIntensity: 0.8 }), 0, 11.2, 0));
+  lh.add(mesh(new THREE.ConeGeometry(1.6, 1.6, 12), M(0xef4444), 0, 12.7, 0));
+  add(lh); block(0, PIER.z1 + 4, 3);
+}
 
-        <!-- 5. VALIDATION (AWARDS/CERTS) -->
-        <section id="creds" class="mb-24">
-            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
-                <h2 class="text-3xl font-bold text-white">Validation Log</h2>
-                <span class="font-mono text-xs text-gray-500 hidden md:block">/var/log/auth</span>
-            </div>
+// Text texture with word-wrap, used for books and plaques
+function textTex(w, h, paint) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d'), tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const wrap = (text, x, y, maxW, lh, maxLines) => {
+    const words = text.split(' '); let line = '', n = 0;
+    for (const wd of words) { const test = line ? line + ' ' + wd : wd; if (ctx.measureText(test).width > maxW && line) { ctx.fillText(line, x, y + n * lh); line = wd; if (++n >= maxLines - 1) { ctx.fillText(line + (words.indexOf(wd) < words.length - 1 ? '…' : ''), x, y + n * lh); return n + 1; } } else line = test; }
+    ctx.fillText(line, x, y + n * lh); return n + 1;
+  };
+  const draw = () => { ctx.clearRect(0, 0, w, h); paint(ctx, wrap, w, h); tex.needsUpdate = true; };
+  draw(); document.fonts?.ready.then(draw);
+  return tex;
+}
 
-            <div class="grid md:grid-cols-2 gap-12">
-                
-                <!-- Certifications -->
-                <div>
-                    <h3 class="text-white font-bold mb-6 flex items-center gap-2">
-                        <i data-lucide="shield-check" class="text-green-500"></i> VERIFIED CREDENTIALS
-                    </h3>
-                    <div id="certs-list" class="space-y-1 text-sm font-mono">
-                        <!-- JS injected content goes here -->
-                    </div>
-                </div>
+// Skill Tree: a giant tree with one glowing branch per discipline
+const skillOrbs = [];
+{
+  const [x, z] = AREA.skills.c;
+  const floor = mesh(new THREE.CircleGeometry(10, 40), M(0xd9f2c7), x, 0.05, z, false); floor.rotation.x = -Math.PI / 2; add(floor);
+  const bark = M(0x7a4e2d);
+  const up = new THREE.Vector3(0, 1, 0);
+  const limb = (a, b, r0, r1) => { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b); const m = mesh(new THREE.CylinderGeometry(r1, r0, A.distanceTo(B), 8), bark); m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(up, B.clone().sub(A).normalize()); add(m); };
+  limb([x, 0, z], [x, 7, z], 1.4, 0.8);
+  [0, 1, 2].forEach(k => { const a = k * 2.1; limb([x, 0.4, z], [x + Math.cos(a) * 2.2, 0, z + Math.sin(a) * 2.2], 0.6, 0.3); });   // roots
+  add(mesh(new THREE.IcosahedronGeometry(3.4, 1), M(0x4ea852), x, 9.2, z));
+  SKILLS.forEach((sk, i) => {
+    const a = i / SKILLS.length * Math.PI * 2 + 0.3, tip = [x + Math.sin(a) * 5.2, 9.5 + (i % 2) * 1.4, z + Math.cos(a) * 5.2];
+    limb([x, 6.2, z], tip, 0.45, 0.22);
+    add(mesh(new THREE.IcosahedronGeometry(1.7, 1), M(0x5fb35a), tip[0], tip[1] + 0.8, tip[2]));
+    const orbMat = new THREE.MeshStandardMaterial({ color: sk.color, emissive: sk.color, emissiveIntensity: 0.2, roughness: 0.3 });
+    const orb = mesh(new THREE.SphereGeometry(0.7, 20, 14), orbMat, tip[0], tip[1] - 0.6, tip[2]); add(orb);
+    skillOrbs.push({ key: sk.key, mat: orbMat, orb, y: tip[1] - 0.6 });
+    // plaque at the base, facing outward
+    const px = x + Math.sin(a) * 7.5, pz = z + Math.cos(a) * 7.5;
+    const g = new THREE.Group(); g.position.set(px, 0, pz); g.rotation.y = a;
+    g.add(mesh(new THREE.BoxGeometry(0.2, 1.2, 0.2), bark, 0, 0.6, 0));
+    const tex = textTex(512, 300, (ctx, wrap, w, h) => {
+      ctx.fillStyle = '#fffdf8'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = sk.color; ctx.fillRect(0, 0, w, 18);
+      ctx.fillStyle = '#1f2430'; ctx.font = '700 44px Space Grotesk, sans-serif'; ctx.fillText(sk.name, 28, 82);
+      ctx.fillStyle = '#4b5263'; ctx.font = '500 27px Space Grotesk, sans-serif'; wrap(sk.list.join(' · '), 28, 132, w - 56, 36, 4);
+    });
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.52), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); face.position.set(0, 1.9, 0.02); g.add(face);
+    const backing = mesh(new THREE.BoxGeometry(2.7, 1.62, 0.08), bark, 0, 1.9, -0.05); g.add(backing);
+    add(g); block(px, pz, 0.5);
+    clickable(g, `🌳 ${sk.name} · ${sk.list.slice(0, 3).join(', ')}…`, () => areaDrawer(AREA.skills));
+  });
+  block(x, z, 1.8);
+  addFocus({ label: 'Skill Tree', sub: 'Six disciplines', color: '#16a34a', T: new THREE.Vector3(x, 6.5, z), C: new THREE.Vector3(x - 17, 7.5, z + 3), spot: [x - 10, z + 2], act: () => areaDrawer(AREA.skills) });
+}
 
-                <!-- Achievements -->
-                <div class="space-y-8">
-                    <div>
-                        <h3 class="text-white font-bold mb-6 flex items-center gap-2">
-                            <i data-lucide="trophy" class="text-yellow-500"></i> COMPETITIVE VICTORIES
-                        </h3>
-                        <div id="awards-list" class="space-y-3 text-sm">
-                            <!-- JS injected content goes here -->
-                        </div>
-                    </div>
+// Community Hub: pavilion + one banner per organization
+{
+  const [x, z] = AREA.community.c;
+  const far = new THREE.Vector2(x, z).normalize();            // banners stand on the side away from spawn
+  const a0 = Math.atan2(far.x, far.y);
+  const floor = mesh(new THREE.CircleGeometry(12, 40), M(0xe3ecff), x, 0.05, z, false); floor.rotation.x = -Math.PI / 2; add(floor);
+  const pav = new THREE.Group(); pav.position.set(x, 0, z);
+  for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; pav.add(mesh(new THREE.CylinderGeometry(0.18, 0.18, 3.6, 8), M(0xffffff), Math.sin(a) * 2.8, 1.8, Math.cos(a) * 2.8)); }
+  pav.add(mesh(new THREE.ConeGeometry(4, 1.8, 6), M(0x2563eb), 0, 4.5, 0));
+  pav.add(mesh(new THREE.CylinderGeometry(3.2, 3.2, 0.25, 6), M(0xffffff), 0, 0.12, 0));
+  add(pav); block(x, z, 3.4);
+  ORGS.forEach(([role, org, d, color], i) => {
+    const a = a0 + (i - (ORGS.length - 1) / 2) * 0.42, bx = x + Math.sin(a) * 9, bz = z + Math.cos(a) * 9;
+    const g = new THREE.Group(); g.position.set(bx, 0, bz); g.rotation.y = a + Math.PI;
+    g.add(mesh(new THREE.CylinderGeometry(0.1, 0.12, 6, 8), M(0xdfe3ea), -1.25, 3, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.1, 0.12, 6, 8), M(0xdfe3ea), 1.25, 3, 0));
+    g.add(mesh(new THREE.BoxGeometry(2.8, 0.12, 0.12), M(0xdfe3ea), 0, 5.8, 0));
+    const tex = textTex(360, 520, (ctx, wrap, w, h) => {
+      ctx.fillStyle = '#fffdf8'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = color; ctx.fillRect(0, 0, w, 64); ctx.fillRect(0, h - 20, w, 20);
+      ctx.fillStyle = '#fff'; ctx.font = '700 26px JetBrains Mono, monospace'; ctx.fillText(d.split(' — ')[0].toUpperCase(), 24, 42);
+      ctx.fillStyle = '#1f2430'; ctx.font = '700 40px Space Grotesk, sans-serif'; const n = wrap(role, 24, 120, w - 48, 44, 2);
+      ctx.fillStyle = '#4b5263'; ctx.font = '500 30px Space Grotesk, sans-serif'; wrap(org, 24, 130 + n * 44, w - 48, 36, 5);
+    });
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 3.3), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, side: THREE.DoubleSide }));
+    cloth.position.set(0, 4.05, 0); g.add(cloth);
+    add(g); block(bx, bz, 1.4, 6);
+    clickable(g, `${role} · ${org}`, () => areaDrawer(AREA.community));
+  });
+  const T = new THREE.Vector3(x + far.x * 8, 3.6, z + far.y * 8);
+  addFocus({ label: 'Community Hub', sub: 'Organizations and events', color: '#2563eb', T, C: new THREE.Vector3(x - far.x * 6, 9.5, z - far.y * 6), spot: [x - far.x * 4, z - far.y * 4], act: () => areaDrawer(AREA.community) });   // high enough to see over the pavilion
+  board(x - 12, z + 2, [0, 0], { kicker: 'Community Hub', title: 'Organizations', sub: 'IEEE · Global Scholars · AutoSecurityy', line: 'Leadership, volunteering and events', color: '#2563eb',
+    click: ['Organizations & events', () => areaDrawer(AREA.community)] });
+}
 
-                    <div>
-                        <h3 class="text-white font-bold mb-4 flex items-center gap-2">
-                            <i data-lucide="award" class="text-yellow-500"></i> HALL OF FAME (40+)
-                        </h3>
-                        <div class="flex flex-wrap gap-2">
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Dell Technologies</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Pinterest</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">EC-Council</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Wageningen Univ</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Pizza Hut</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Blue Jeans</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Careem</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Humble Bundle</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">SAP Concur</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Under Armor</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Unilever</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">Viator</span>
-                            <span class="text-xs border border-yellow-500/30 text-yellow-500 px-2 py-1">SmartThings</span>
-                            <span class="text-xs border border-gray-700 text-gray-500 px-2 py-1">+ 25 More</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+// The Library: giant clickable books in an arc around a reading plaza
+{
+  const [x, z] = AREA.library.c;
+  const floor = mesh(new THREE.CircleGeometry(13, 40), M(0xe7f3f5), x, 0.05, z, false); floor.rotation.x = -Math.PI / 2; add(floor);
+  const back = mesh(new THREE.CylinderGeometry(14.5, 14.5, 5, 40, 1, true, Math.PI * 0.05, Math.PI * 0.9), M(0xfff6e6, { side: THREE.DoubleSide }), x, 2.5, z); add(back);
+  add(mesh(new THREE.CylinderGeometry(14.8, 14.8, 0.5, 40, 1, true, Math.PI * 0.05, Math.PI * 0.9), M(0x0891b2, { side: THREE.DoubleSide }), x, 5.2, z));
+  for (let k = 0; k <= 12; k++) { const a = Math.PI * 0.05 + k / 12 * Math.PI * 0.9; block(x + Math.sin(a) * 14.5, z + Math.cos(a) * 14.5, 1.1); }
+  const books = [...PAPERS.map(([t, a, st, c, u]) => ({ kind: 'PAPER', t, sub: a.replace(/<[^>]+>/g, ''), badge: st, color: '#0f766e', url: u || LINKS.scholar, cta: u ? 'Read the preprint ↗' : 'View on Scholar ↗' })),
+                 ...ARTICLES.map(([t, w, d, u]) => ({ kind: 'ARTICLE', t, sub: `${w} · ${d}`, badge: 'READ', color: '#b45309', url: u, cta: 'Read article ↗' }))];
+  books.forEach((b, i) => {
+    const a = Math.PI * 0.12 + i / (books.length - 1) * Math.PI * 0.76;          // spread along the east half of the arc
+    const bx = x + Math.sin(a) * 10.5, bz = z + Math.cos(a) * 10.5;
+    const g = new THREE.Group(); g.position.set(bx, 0, bz); g.rotation.y = a + Math.PI; g.rotation.z = (i % 2 ? 1 : -1) * 0.03;
+    g.add(mesh(new THREE.BoxGeometry(2.2, 3.2, 0.5), M(b.color), 0, 1.75, 0));
+    g.add(mesh(new THREE.BoxGeometry(2.0, 3.0, 0.46), M(0xfffaf0), 0.12, 1.75, -0.04));      // pages
+    const tex = textTex(440, 640, (ctx, wrap, w, h) => {
+      ctx.fillStyle = b.color; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(24, 24, w - 48, h - 48);
+      ctx.fillStyle = '#fde68a'; ctx.font = '700 28px JetBrains Mono, monospace'; ctx.fillText(b.kind, 44, 78);
+      ctx.fillStyle = '#ffffff'; ctx.font = '700 40px Space Grotesk, sans-serif'; const n = wrap(b.t, 44, 140, w - 88, 48, 7);
+      ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.font = '500 24px Space Grotesk, sans-serif'; wrap(b.sub, 44, 160 + n * 48, w - 88, 30, 3);
+      ctx.fillStyle = '#fde68a'; ctx.font = '700 26px JetBrains Mono, monospace'; ctx.fillText(b.cta, 44, h - 52);
+    });
+    const cover = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 3.06), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+    cover.position.set(0, 1.75, 0.32); g.add(cover);
+    add(g); block(bx, bz, 1.2, 4);
+    clickable(g, `${b.kind === 'PAPER' ? '📄' : '📰'} ${b.t.length > 48 ? b.t.slice(0, 46) + '…' : b.t} · ${b.cta}`, () => window.open(b.url, '_blank', 'noopener'));
+  });
+  addFocus({ label: 'The Library', sub: 'Click a book to open it', color: '#0891b2', T: new THREE.Vector3(x + 9, 1.9, z), C: new THREE.Vector3(x - 6, 4.5, z), spot: [x - 4, z], act: () => areaDrawer(AREA.library) });
+  board(x - 8, z + 16, [40, -8], { kicker: 'The Library', title: 'Publications', sub: `${PAPERS.length} papers · ${ARTICLES.length} articles`, line: 'Click a book to open it', color: '#0891b2',
+    click: ['All publications', () => areaDrawer(AREA.library)] });
+}
 
-        <!-- 7. EDUCATION & AFFILIATIONS -->
-        <section id="affiliations" class="mb-24">
-            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
-                <h2 class="text-3xl font-bold text-white">Academic Path</h2>
-                <span class="font-mono text-xs text-gray-500 hidden md:block">/etc/education</span>
-            </div>
+// Hall of Fame: curved wall of gold plaques + trophy
+const plaques = [];
+{
+  const [x, z] = AREA.hof.c;
+  const floor = mesh(new THREE.CircleGeometry(13, 40), M(0xfdf3d6), x, 0.05, z, false); floor.rotation.x = -Math.PI / 2; add(floor);
+  // wall on the west half, opening toward the east road
+  const span = Math.PI * 0.95, start = Math.PI + (Math.PI - span) / 2;   // x = sin(a) < 0 → west half
+  add(mesh(new THREE.CylinderGeometry(13, 13, 6, 40, 1, true, start, span), M(0x3b4a63, { side: THREE.DoubleSide }), x, 3, z));
+  add(mesh(new THREE.CylinderGeometry(13.3, 13.3, 0.5, 40, 1, true, start, span), M(0xd4a017, { side: THREE.DoubleSide, metalness: 0.5, roughness: 0.4 }), x, 6.2, z));
+  for (let k = 0; k <= 12; k++) { const a = start + k / 12 * span; block(x + Math.sin(a) * 13, z + Math.cos(a) * 13, 1.1); }
+  const names = [...HOF, '+ 27 more'];
+  names.forEach((n, i) => {
+    const row = i % 2, col = Math.floor(i / 2), cols = Math.ceil(names.length / 2);
+    const a = start + (col + 0.5) / cols * span;
+    const px = x + Math.sin(a) * 12.6, pz = z + Math.cos(a) * 12.6;
+    const mat = new THREE.MeshStandardMaterial({ color: 0xd4a017, metalness: 0.3, roughness: 0.35, emissive: 0xffc93c, emissiveIntensity: 0 });
+    const g = new THREE.Group(); g.position.set(px, row ? 2 : 4.1, pz); g.rotation.y = a + Math.PI;
+    g.add(mesh(new THREE.BoxGeometry(2.6, 1.5, 0.12), mat, 0, 0, 0, false));
+    const tex = textTex(512, 296, (ctx, wrap, w, h) => {
+      ctx.fillStyle = '#2b2410'; ctx.fillRect(14, 14, w - 28, h - 28);
+      ctx.fillStyle = '#ffd666'; ctx.font = '600 22px JetBrains Mono, monospace'; ctx.textAlign = 'center'; ctx.fillText('HALL OF FAME', w / 2, 70);
+      ctx.fillStyle = '#ffffff'; ctx.font = `700 ${n.length > 14 ? 46 : 56}px Space Grotesk, sans-serif`; ctx.fillText(n, w / 2, 170);
+      ctx.fillStyle = '#ffd666'; ctx.font = '500 22px Space Grotesk, sans-serif'; ctx.fillText(i < HOF.length ? 'Responsible disclosure' : 'organizations', w / 2, 230);
+    });
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.32), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+    face.position.z = 0.07; g.add(face); add(g);
+    clickable(g, `🏆 ${n} · Security Hall of Fame`, () => areaDrawer(AREA.hof));
+    if (i < HOF.length) plaques.push({ name: n, mat });
+  });
+  addFocus({ label: 'Hall of Fame', sub: '40+ organizations', color: '#d4a017', T: new THREE.Vector3(x - 10, 3, z), C: new THREE.Vector3(x + 6, 4.5, z), spot: [x + 5, z], act: () => areaDrawer(AREA.hof) });
+  // trophy in the middle
+  const tg = new THREE.Group(); tg.position.set(x - 2, 0, z + 7);
+  tg.add(mesh(new THREE.CylinderGeometry(1.4, 1.6, 1.2, 20), M(0x2b303b), 0, 0.6, 0));
+  const gold = M(0xf5b301, { metalness: 0.3, roughness: 0.3, emissive: 0x8a5a00, emissiveIntensity: 0.35, flatShading: false });
+  tg.add(mesh(new THREE.CylinderGeometry(0.25, 0.4, 1, 12), gold, 0, 1.7, 0));
+  const pts = []; for (let k = 0; k <= 12; k++) { const t = k / 12; pts.push(new THREE.Vector2(0.2 + Math.sin(t * Math.PI * 0.55) * 1.1, t * 1.8)); }
+  tg.add(mesh(new THREE.LatheGeometry(pts, 24), M(0xf5b301, { metalness: 0.3, roughness: 0.3, emissive: 0x8a5a00, emissiveIntensity: 0.35, flatShading: false, side: THREE.DoubleSide }), 0, 2.2, 0));
+  [-1, 1].forEach(sd => { const h = mesh(new THREE.TorusGeometry(0.45, 0.08, 8, 16, Math.PI), gold, sd * 1.25, 3.2, 0); h.rotation.z = sd * Math.PI / 2; tg.add(h); });
+  add(tg); block(x - 2, z + 7, 1.8);
+  clickable(tg, '🏆 40+ organizations · Hall of Fame', () => areaDrawer(AREA.hof));
+}
 
-            <div class="grid md:grid-cols-2 gap-12">
-                
-                <!-- Education Block -->
-                <div class="terminal-box p-6 space-y-4">
-                    <h3 class="text-xl font-bold text-white">Bachelor of Science in Computer Science (Dual Program)</h3>
-                    <p class="text-lg text-gray-400 font-mono">Fairleigh Dickinson University & Caucasus University</p>
-                    <p class="text-sm text-gray-500 font-mono">Anticipated May 2026</p>
-                    
-                    <div class="mt-4 space-y-3">
-                        <h4 class="text-sm font-semibold text-white border-b border-gray-700 pb-2">Relevant Coursework:</h4>
-                        <ul class="list-disc list-outside ml-4 text-sm text-gray-400 space-y-1">
-                            <li><span class="font-semibold text-cyan-400">CS:</span> Algorithms, Machine Learning, Big Data Analytics, Computer Networks.</li>
-                            <li><span class="font-semibold text-cyan-400">Math:</span> Calculus, Linear Algebra, Probability & Statistics.</li>
-                            <li><span class="font-semibold text-cyan-400">Electives:</span> Deep learning & Application, Security Application, Forensic Psychology.</li>
-                        </ul>
-                    </div>
-                </div>
+addFocus({ label: 'Root Hill', sub: 'The secret root flag', color: '#1f2430', T: new THREE.Vector3(HILL.x, HILL.h + 3, HILL.z), C: new THREE.Vector3(HILL.x - 24, 9, HILL.z + 6),
+  spot: [HILL.x - HILL.r - 12, HILL.z], act: () => areaDrawer(AREA.root) });
 
-                <!-- Affiliations Block (Tiles) -->
-                <div class="terminal-box p-6 space-y-4">
-                    <h3 class="text-xl font-bold text-white">Professional Organization / Memberships</h3>
-                    <div class="grid grid-cols-2 gap-3 font-mono text-sm">
-                        
-                        <div class="affiliate-tile p-3 rounded-lg"> 
-                            <a href="https://www.fdu.edu/academics/global-education/global-scholars/" target="_blank">
-                            <span class="text-purple-400 font-bold block">Leader, Global Scholars</span>
-                            <span class="text-gray-600 text-[10px]">FDU (Fall 2025)</span>
-                            </a>
-                        </div>
-                        <div class="affiliate-tile p-3 rounded-lg">
-                            <a href="https://carhackers.space/" target="_blank">
-                            <span class="text-purple-400 font-bold block">Member, Car Hackers Space</span>
-                            <span class="text-gray-600 text-[10px]">Oct 2025</span>
-                            </a>
-                        </div>
-                        <div class="affiliate-tile p-3 rounded-lg">
-                            <a href="https://www.ieee.org/membership/join" target="_blank">
-                            <span class="text-purple-400 font-bold block">Member #101722049, IEEE 
-                            </span>
-                            <span class="text-gray-600 text-[10px]">Jul 2025</span>
-                            </a>
-                        </div>
-                        <div class="affiliate-tile p-3 rounded-lg">
-                            <a href="https://autosecurityy.com/" target="_blank">
-                            <span class="text-purple-400 font-bold block">Core Team, AutoSecurityy</span>
-                            <span class="text-gray-600 text-[10px]">Mar 2024</span>
-                            </a>
-                        </div>
+/* =====================================================================
+   FLAGS
+   ===================================================================== */
+const flagObjs = {};
+AREAS.filter(a => a.flag).forEach(a => {
+  const [x, z] = a.flag, y = a.id === 'root' ? HILL.h : a.id === 'contact' ? 0.4 : 0;
+  const g = new THREE.Group(); g.position.set(x, y, z);
+  g.add(mesh(new THREE.CylinderGeometry(0.12, 0.12, 6, 8), M(0xdfe3ea), 0, 3, 0));
+  g.add(mesh(new THREE.CylinderGeometry(0.9, 1.1, 0.3, 16), M(0x4b5263), 0, 0.15, 0));
+  const clothGeo = new THREE.PlaneGeometry(2.4, 1.5, 8, 4); clothGeo.translate(1.2, 0, 0);
+  const cloth = mesh(clothGeo, M(a.color, { side: THREE.DoubleSide, flatShading: false }), 0.1, 5.1, 0);
+  g.add(cloth); add(g);
+  const ring = mesh(new THREE.RingGeometry(1.8, 2.3, 32), new THREE.MeshBasicMaterial({ color: a.color, transparent: true, opacity: 0.7 }), x, y + 0.1, z, false);
+  ring.rotation.x = -Math.PI / 2; add(ring);
+  flagObjs[a.id] = { g, cloth, ring, base: clothGeo.attributes.position.array.slice(), y };
+});
 
-                    </div>
-                </div>
-            </div>
-        </section>
+const COIN_SPOTS = [[0, -32, 1.4], [0, -64, 1.4], [-52, -48, 4.4], [66, -40, 1.4], [82, 22, 1.4], [-76, 34, 1.4], [HILL.x, HILL.z - 5, HILL.h + 1.4],
+  [0, 128, 1.8], [30, -80, 1.4], [-30, -80, 1.4], [72, -16, 1.4], [-72, -16, 1.4], [-36, 62, 1.4]];
 
-        <!-- 6. INTEL FEED (EVENTS & BLOGS) -->
-        <section id="intel" class="mb-24">
-            <div class="flex items-end justify-between mb-10 border-b border-white/10 pb-4">
-                <h2 class="text-3xl font-bold text-white">Intel Feed</h2>
-                <span class="font-mono text-xs text-gray-500 hidden md:block">/var/log/activity</span>
-            </div>
+/* =====================================================================
+   NATURE (instanced): trees, rocks, lamps, clouds
+   ===================================================================== */
+const clear = (x, z, pad) => !onRoad(x, z) && !colliders.some(c => Math.hypot(c.x - x, c.z - z) < c.r + pad) && !boardSpots.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 8) && !COIN_SPOTS.some(([cx, cz]) => Math.hypot(cx - x, cz - z) < 3.5)
+  && !AREAS.some(a => a.r && Math.hypot(a.c[0] - x, a.c[1] - z) < a.r - 4) && !(Math.abs(x) < 15 && z < -10 && z > -104)
+  && Math.hypot(x - HILL.x, z - HILL.z) > HILL.r + 3 && !RAMPS.some(r => Math.hypot(r.x - x, r.z - z) < r.len + 4)
+  && Math.hypot(x, z) < shoreR(Math.atan2(-z, x)) - 3;
+let bulbMat;
+{
+  const leafy = [], pines = [], bushes = [], rocks = [];
+  let guard = 0;
+  while (leafy.length + pines.length < 185 && guard++ < 9000) {
+    const t = rand() * Math.PI * 2, r = 8 + Math.sqrt(rand()) * 95, x = r * Math.cos(t), z = r * Math.sin(t);
+    if (!clear(x, z, 4)) continue;
+    // pines gather toward the rugged north & west, leafy trees elsewhere
+    const pineChance = 0.15 + (z < -40 ? 0.35 : 0) + (x < -50 ? 0.2 : 0);
+    (rand() < pineChance ? pines : leafy).push([x, z, 0.8 + rand() * 0.65]);
+  }
+  guard = 0;
+  while (bushes.length < 80 && guard++ < 6000) {
+    const t = rand() * Math.PI * 2, r = 10 + Math.sqrt(rand()) * 92, x = r * Math.cos(t), z = r * Math.sin(t);
+    if (clear(x, z, 2)) bushes.push([x, z, 0.5 + rand() * 0.6]);
+  }
+  guard = 0;
+  while (rocks.length < 30 && guard++ < 3000) { const t = rand() * Math.PI * 2, r = 20 + rand() * 90, x = r * Math.cos(t), z = r * Math.sin(t); if (clear(x, z, 1.5)) rocks.push([x, z, 0.5 + rand() * 1.1]); }
 
-            <div class="grid md:grid-cols-2 gap-12">
-                
-                <!-- Blog -->
-                <div class="terminal-box p-6">
-                    <h3 class="text-cyan-400 font-bold font-mono mb-6">/ WRITE-UPS</h3>
-                    <div class="space-y-4">
-                        <a href="https://brightsec.com/blog/is-your-ai-assistant-leaking-secrets-a-look-at-data-exfiltration-in-code-generation/" target="_blank" class="block group">
-                            <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">Is Your AI Assistant Leaking Secrets? A Look At Data Exfiltration In Code Generation</h4>
-                            <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
-                                <span>Insight: AppSec, Threats and Vulnerabilities</span>
-                                <span>Feb 2026</span>
-                            </div>
-                        </a>
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(), col = new THREE.Color(), e = new THREE.Euler();
+  const inst = (geo, mat, n) => { const im = new THREE.InstancedMesh(geo, mat, n); im.castShadow = true; im.receiveShadow = true; add(im); return im; };
+  const leafM = M(0xffffff), barkM = M(0x8b5e3c);
+  const trunkGeo = new THREE.CylinderGeometry(0.16, 0.3, 2, 7); trunkGeo.translate(0, 1, 0);
+  const blobGeo = new THREE.IcosahedronGeometry(1.5, 1);
+  const tint = () => { const r = rand(); return r < 0.08 ? [0xf9a8d4, 0xfbcfe8] : r < 0.15 ? [0xf59e0b, 0xfbbf24] : [[0x5fb35a, 0x7cc95f], [0x4ea852, 0x6dbb55], [0x79c25c, 0x9fd46b], [0x3f9a4f, 0x58b05a]][Math.floor(rand() * 4)]; };
 
-                        
-                        <a href="https://brightsec.com/blog/prompt-injection-attacks-why-traditional-appsec-tools-fall-short/" target="_blank" class="block group">
-                            <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">Prompt Injection Attacks: Why Traditional AppSec Tools Fall Short</h4>
-                            <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
-                                <span>Insight: AppSec</span>
-                                <span>Jan 2026</span>
-                            </div>
-                        </a>
-                        <a href="https://brightsec.com/blog/the-2026-state-of-llm-security-key-findings-and-benchmarks/" target="_blank" class="block group">
-                            <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">The 2026 State of LLM Security: Key Findings and Benchmarks</h4>
-                            <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
-                                <span>Research: AI Security</span>
-                                <span>Jan 2026</span>
-                            </div>
-                        </a>
-                        <a href="https://brightsec.com/blog/configure-bright-mcp-in-augment-code/" target="_blank" class="block group">
-                            <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">Configure Bright MCP in Augment Code</h4>
-                            <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
-                                <span>Writeup: AppSec</span>
-                                <span>Jan 2026</span>
-                            </div>
-                        </a>
-                        <a href="https://medium.com/autosecurityy/guarding-the-grid-securing-the-future-of-ev-charging-stations-042090262453" target="_blank" class="block group">
-                            <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">Guarding the Grid: Securing EV Charging Stations</h4>
-                            <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
-                                <span>Insight: Automotive IoT</span>
-                                <span>Sep 2025</span>
-                            </div>
-                        </a>
-                        
-                        
-                        <!-- Hidden Blogs Container -->
-                        <div id="additional-blogs" class="hidden space-y-4">
-                  <!--          <a href="https://medium.com/autosecurityy/guarding-the-grid-securing-the-future-of-ev-charging-stations-042090262453" target="_blank" class="block group">
-                            <h4 class="text-white font-bold group-hover:text-green-400 transition-colors">Guarding the Grid: Securing EV Charging Stations</h4>
-                            <div class="flex justify-between mt-1 text-xs text-gray-500 font-mono">
-                                <span>Insight: Automotive IoT</span>
-                                <span>Sep 2025</span>
-                            </div>
-                        </a> -->
-            
-                        </div>
+  // leafy trees: tapered trunk + 3 overlapping rounded blobs
+  const lt = inst(trunkGeo, barkM, leafy.length), l1 = inst(blobGeo, leafM, leafy.length), l2 = inst(blobGeo, leafM, leafy.length), l3 = inst(blobGeo, leafM, leafy.length);
+  leafy.forEach(([x, z, k], i) => {
+    const yaw = rand() * 6, lean = (rand() - 0.5) * 0.12, [c1, c2] = tint();
+    q.setFromEuler(e.set(lean, yaw, lean)); lt.setMatrixAt(i, m4.compose(p.set(x, 0, z), q, s.set(k, k * (1 + rand() * 0.3), k)));
+    const h = 2.1 * k;
+    l1.setMatrixAt(i, m4.compose(p.set(x, h + 1.1 * k, z), q, s.set(1.15 * k, 1.0 * k, 1.15 * k)));
+    l2.setMatrixAt(i, m4.compose(p.set(x + Math.cos(yaw) * 0.8 * k, h + 0.6 * k, z + Math.sin(yaw) * 0.8 * k), q, s.set(0.8 * k, 0.75 * k, 0.8 * k)));
+    l3.setMatrixAt(i, m4.compose(p.set(x - Math.cos(yaw) * 0.5 * k, h + 1.9 * k, z - Math.sin(yaw) * 0.5 * k), q, s.set(0.7 * k, 0.65 * k, 0.7 * k)));
+    l1.setColorAt(i, col.setHex(c1)); l2.setColorAt(i, col.setHex(c2)); l3.setColorAt(i, col.setHex(c2).offsetHSL(0, 0, 0.04));
+    colliders.push({ x, z, r: 0.45 * k, h: 6 });
+  });
 
-                        <button id="toggle-blogs-btn" onclick="toggleBlogEvents()" class="text-xs text-gray-500 hover:text-white font-mono mt-2 border-t border-gray-800 w-full pt-2 text-left">
-                            [+] EXPAND LOGS
-                        </button>
-                    </div>
-                </div>
+  // pines: trunk + three stacked cones
+  const coneGeo = new THREE.ConeGeometry(1.5, 2.2, 8);
+  const pt = inst(trunkGeo, barkM, pines.length), p1 = inst(coneGeo, leafM, pines.length), p2 = inst(coneGeo, leafM, pines.length), p3 = inst(coneGeo, leafM, pines.length);
+  const pineGreens = [0x2f7d4f, 0x3a8f5a, 0x2a6e47, 0x438f5f];
+  pines.forEach(([x, z, k], i) => {
+    q.setFromEuler(e.set(0, rand() * 6, 0)); const g = pineGreens[i % pineGreens.length];
+    pt.setMatrixAt(i, m4.compose(p.set(x, 0, z), q, s.set(k * 0.9, k * 0.8, k * 0.9)));
+    [[p1, 2.4, 1.0], [p2, 3.6, 0.78], [p3, 4.7, 0.55]].forEach(([im, y, sc], j) => {
+      im.setMatrixAt(i, m4.compose(p.set(x, y * k, z), q, s.set(sc * k, sc * k, sc * k)));
+      im.setColorAt(i, col.setHex(g).offsetHSL(0, 0, j * 0.03));
+    });
+    colliders.push({ x, z, r: 0.4 * k, h: 7 });
+  });
 
-                <!-- Events -->
-                <div class="terminal-box p-6">
-                    <h3 class="text-cyan-400 font-bold font-mono mb-6">/ FIELD OPS</h3>
-                    
-                    <!-- Upcoming Events -->
-                    <div class="mb-6">
-                        <h4 class="text-xs font-bold text-green-500 mb-3 border-b border-gray-800 pb-1">UPCOMING SCHEDULE</h4>
-                        <div id="upcoming-events-container" class="space-y-3">
-                            <!-- JS Injected -->
-                        </div>
-                    </div>
+  // bushes: squashed blobs, some with little flowers
+  const bu = inst(new THREE.IcosahedronGeometry(1, 1), leafM, bushes.length);
+  const fl = inst(new THREE.IcosahedronGeometry(0.16, 0), M(0xffffff, { emissive: 0xffffff, emissiveIntensity: 0.1 }), bushes.length);
+  const flowerCols = [0xfef08a, 0xf9a8d4, 0xffffff, 0xc4b5fd];
+  bushes.forEach(([x, z, k], i) => {
+    q.setFromEuler(e.set(0, rand() * 6, 0));
+    bu.setMatrixAt(i, m4.compose(p.set(x, 0.35 * k, z), q, s.set(1.3 * k, 0.75 * k, 1.1 * k)));
+    bu.setColorAt(i, col.setHex([0x6dbb55, 0x58a84c, 0x82c95e][i % 3]));
+    const flower = rand() < 0.45;
+    fl.setMatrixAt(i, m4.compose(p.set(x + 0.4 * k, 0.85 * k, z + 0.3 * k), q, s.setScalar(flower ? k * 1.2 : 0.0001)));
+    fl.setColorAt(i, col.setHex(flowerCols[i % flowerCols.length]));
+  });
 
-                    <!-- Past Events -->
-                    <div>
-                        <h4 class="text-xs font-bold text-gray-500 mb-3 border-b border-gray-800 pb-1">ARCHIVE</h4>
-                        <div id="past-events-visible" class="space-y-3">
-                            <!-- JS Injected (Latest 3) -->
-                        </div>
+  const rock = inst(new THREE.DodecahedronGeometry(1, 0), M(0xb5b8bf), rocks.length);
+  rocks.forEach(([x, z, k], i) => { q.setFromEuler(e.set(rand(), rand() * 6, rand())); rock.setMatrixAt(i, m4.compose(p.set(x, 0.3 * k, z), q, s.set(k, k * 0.7, k))); colliders.push({ x, z, r: 0.8 * k, h: 1.2 * k }); });
 
-                        <!-- Hidden Container for Remaining Past Events -->
-                        <div id="past-events-hidden" class="hidden space-y-3 mt-3">
-                            <!-- JS Injected (Remaining) -->
-                        </div>
-                        
-                        <button id="toggle-past-events-btn" onclick="togglePastEvents()" class="text-xs text-gray-500 hover:text-white font-mono mt-4 border-t border-gray-800 w-full pt-2 text-left" style="display: none;">
-                            [+] EXPAND ARCHIVE
-                        </button>
-                    </div>
-                </div>
+  const lamps = [];
+  SEGS.forEach(([[x1, z1], [x2, z2]]) => { const len = Math.hypot(x2 - x1, z2 - z1), nx = -(z2 - z1) / len, nz = (x2 - x1) / len;
+    for (let d = 14; d < len - 8; d += 34) { const t = d / len, lx = x1 + (x2 - x1) * t + nx * (ROAD_W / 2 + 1), lz = z1 + (z2 - z1) * t + nz * (ROAD_W / 2 + 1); if (!onRoad(lx, lz) && Math.hypot(lx, lz) > 22) lamps.push([lx, lz]); } });
+  const pole = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.1, 0.12, 4, 6), M(0x4b5263), lamps.length);
+  bulbMat = new THREE.MeshStandardMaterial({ color: 0xfff6d6, emissive: 0xffc861, emissiveIntensity: 0 });
+  const bulb = new THREE.InstancedMesh(new THREE.SphereGeometry(0.35, 10, 8), bulbMat, lamps.length);
+  lamps.forEach(([x, z], i) => { pole.setMatrixAt(i, m4.makeTranslation(x, 2, z)); bulb.setMatrixAt(i, m4.makeTranslation(x, 4.1, z)); });
+  pole.castShadow = true; add(pole, bulb);
+}
+const clouds = [];
+{
+  const cm = M(0xffffff);
+  for (let i = 0; i < 9; i++) {
+    const g = new THREE.Group();
+    for (let k = 0; k < 4; k++) g.add(mesh(new THREE.IcosahedronGeometry(3 + rand() * 3, 1), cm, k * 4 - 6, rand() * 1.5, rand() * 3, false));
+    g.position.set((rand() - 0.5) * 300, 45 + rand() * 20, (rand() - 0.5) * 300); g.scale.y = 0.6;
+    add(g); clouds.push(g);
+  }
+}
 
-            </div>
-        </section>
+/* =====================================================================
+   PHYSICS PROPS (lightweight sphere contacts with sleeping bodies)
+   ===================================================================== */
+const props = [];
+function prop(geo, mat, x, y, z, o = {}) {
+  const m = mesh(geo, mat, x, y, z); add(m);
+  props.push({ m, p: m.position, v: new THREE.Vector3(), w: new THREE.Vector3(), r: o.r || 0.7, hh: o.hh || 0.5, home: m.position.clone(), awake: false, fixed: !!o.fixed, group: o.group, moved: false });
+}
+for (let i = 0; i < 6; i++) prop(new THREE.ConeGeometry(0.45, 1.2, 10), M(0xff7a1a), -10 - i * 2.4, 0.6, 30, { r: 0.5, hh: 0.6, group: 'cone' });
+{
+  const [x, z] = AREA.workshop.c;
+  for (let k = 0; k < 5; k++) for (let j = 0; j < 2; j++) {
+    prop(new THREE.BoxGeometry(1.6, 0.9, 1.4), M(k % 2 ? 0x2b303b : 0x3a4150), x + 4, 0.45 + k * 0.9, z - 0.8 + j * 1.5, { r: 0.75, hh: 0.45, group: 'rack' });
+    props.at(-1).m.add(mesh(new THREE.BoxGeometry(0.06, 0.12, 1), M(0x22c55e, { emissive: 0x22c55e, emissiveIntensity: 1.2 }), -0.82, 0.15, 0, false));
+  }
+  [[x - 6, z + 6], [x - 4, z + 7.5], [x + 10, z + 8]].forEach(([bx, bz]) => prop(new THREE.CylinderGeometry(0.6, 0.6, 1.3, 12), M(0x2f7dd1), bx, 0.65, bz, { r: 0.65, hh: 0.65, group: 'barrel' }));
+}
+{
+  const [x, z] = AREA.vault.c;
+  for (let k = 0; k < 3; k++) for (let j = 0; j < 8; j++)
+    prop(new THREE.BoxGeometry(0.9, 0.9, 1.5), M((j + k) % 2 ? 0xe24c3b : 0xf26b4f), x - 4.4, 0.45 + k * 0.9, z - 5.2 + j * 1.5 + (k % 2) * 0.4, { r: 0.75, hh: 0.45, group: 'wall', fixed: true });
+}
 
-        <!-- Footer -->
-        <footer id="contact" class="border-t border-white/10 pt-12 pb-6 text-center">
-            <h2 class="text-2xl font-bold text-white mb-6">ACCESS GRANTED.</h2>
-            <div class="flex justify-center space-x-6 text-gray-400 mb-6">
-                <a href="https://linkedin.com/in/dakshkhurana1222/" target="_blank" class="hover:text-white transition-colors" title="LinkedIn Profile">
-                    <i data-lucide="linkedin" class="w-6 h-6"></i>
-                </a>
-                <a href="https://github.com/1n1t6Sh3ll" target="_blank" class="hover:text-white transition-colors" title="GitHub Profile #1">
-                    <i data-lucide="github" class="w-6 h-6"></i>
-                </a>
-                <a href="https://github.com/n16htb0t" target="_blank" class="hover:text-white transition-colors" title="GitHub Profile #2">
-                    <i data-lucide="github" class="w-6 h-6"></i>
-                </a>
-                <a href="mailto:dakshkhuranaofficial@gmail.com" class="hover:text-white transition-colors" title="Email: dakshkhuranaofficial@gmail.com">
-                    <i data-lucide="mail" class="w-6 h-6"></i>
-                </a>
-            </div>
-            <p class="text-gray-600 text-xs mt-12 font-mono flex flex-col sm:flex-row justify-center items-center gap-2">
-                <span>SYSTEM_ID: DAKSH_PF_V6.0 // ENCRYPTED</span>
-            </p>
-        </footer>
+/* =====================================================================
+   COINS
+   ===================================================================== */
 
-    </main>
+const coinGeo = new THREE.CylinderGeometry(0.75, 0.75, 0.16, 24); coinGeo.rotateX(Math.PI / 2);
+const coinMat = M(0xffcc33, { metalness: 0.3, roughness: 0.25, emissive: 0xb07800, emissiveIntensity: 0.55, flatShading: false });
+const coins = HOF.map((name, i) => { const [x, z, y] = COIN_SPOTS[i]; const m = mesh(coinGeo, coinMat, x, y, z); m.visible = !state.coins.includes(name); add(m); return { name, m, y, ph: rand() * 6 }; });
 
-    <script>
-        lucide.createIcons();
-        const apiKey = ""; // Runtime provided key
+/* =====================================================================
+   VEHICLES
+   ===================================================================== */
+const SPECS = {
+  bike:  { name: 'BIKE',  max: 24, boost: 36, acc: 22, brake: 44, turn: 2.6, r: 0.8, mass: 1.0, lean: 0.35 },
+  truck: { name: 'TRUCK', max: 20, boost: 29, acc: 14, brake: 30, turn: 1.7, r: 1.8, mass: 1.6, lean: 0.03 },
+};
+const PAINTS = [['Tangerine', 0xff6b35], ['Ocean', 0x0ea5e9], ['Grape', 0x8b5cf6], ['Mint', 0x14b8a6], ['Cherry', 0xef4444], ['Gold', 0xf5b301]];
+function wheel(r, w) {
+  const g = new THREE.Group(); g.rotation.order = 'YXZ';
+  const t = mesh(new THREE.CylinderGeometry(r, r, w, 16), M(0x2b2b2b)); t.rotation.z = Math.PI / 2; g.add(t);
+  const hub = mesh(new THREE.CylinderGeometry(r * 0.5, r * 0.5, w + 0.02, 10), M(0xe5e7eb)); hub.rotation.z = Math.PI / 2; g.add(hub);
+  return g;
+}
+function makeBike() {
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const paint = new THREE.MeshPhysicalMaterial({ color: 0xff6b35, metalness: 0.35, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.12 });
+  const black = new THREE.MeshStandardMaterial({ color: 0x1c1f26, roughness: 0.45, metalness: 0.5 });
+  const chrome = new THREE.MeshStandardMaterial({ color: 0xe3e7ee, roughness: 0.18, metalness: 1 });
+  const rubber = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.92 });
+  const leather = new THREE.MeshStandardMaterial({ color: 0x2a211c, roughness: 0.75 });
+  const jacket = new THREE.MeshStandardMaterial({ color: 0x2f6fdb, roughness: 0.55 });
+  const pants = new THREE.MeshStandardMaterial({ color: 0x3b4252, roughness: 0.7 });
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0x9fd3ef, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.45 });
+  const visorM = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.08, metalness: 0.9 });
+  const part = (geo, mat, pos, rot = [0, 0, 0], scl = [1, 1, 1]) => { const m = new THREE.Mesh(geo, mat); m.position.set(...pos); m.rotation.set(...rot); m.scale.set(...scl); m.castShadow = true; body.add(m); return m; };
+  const up = new THREE.Vector3(0, 1, 0);
+  const tube = (a, b, r, mat, capsule = false) => {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), len = A.distanceTo(B);
+    const m = new THREE.Mesh(capsule ? new THREE.CapsuleGeometry(r, len, 4, 10) : new THREE.CylinderGeometry(r, r, len, 10), mat);
+    m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(up, B.clone().sub(A).normalize()); m.castShadow = true; body.add(m); return m;
+  };
 
-        // --- Event Data ---
-        const ALL_EVENTS = [
-            { name: "IEEE Summit on Applied AI for BioInformatics and Cybersecurity", date: "Dec 9, 2025", role: "SPEAKER" },
-            { name: "Academic Conference on Africa, UN HQ", date: "Dec 1, 2025", role: "DELEGATE" },
-            { name: "Building Scalable GenAI Product (IEEE)", date: "Oct 29, 2025", role: "ATTENDED" },
-            { name: "GlobalMindED/FSUN Event, UN HQ", date: "Oct 20, 2025", role: "DELEGATE" },
-            { name: "Evolution of Lang Tech (IEEE)", date: "Sep 24, 2025", role: "ATTENDED" },
-            { name: "DeGameFi 2024, Tbilisi", date: "Jun 22, 2024", role: "ATTENDED" },
-            { name: "Nullcon Goa", date: "Sep 25, 2023", role: "ATTENDED" },
-            { name: "Seasides Goa", date: "Sep 20, 2023", role: "ATTENDED" },
-            { name: "BSides Bangalore", date: "Jun 1, 2023", role: "ATTENDED" },
-            { name: "BSides Delhi", date: "Nov 11, 2022", role: "ATTENDED" },
-            { name: "BSides Ahmedabad", date: "Oct 1, 2022", role: "ATTENDED" },
-            { name: "Defcon Delhi 9111 0x5", date: "Aug 6, 2022", role: "ATTENDED" },
-            { name: "Harvard US-India Initiative", date: "Feb 5, 2021", role: "DELEGATE" }
-        ];
-        
-        // --- Custom Sorting Logic for Certs/Awards in Static HTML ---
-        function parseDate(dateStr) {
-            const parts = dateStr.split(' ');
-            if (parts.length === 2) {
-                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const month = monthNames.indexOf(parts[0]) + 1;
-                const year = parseInt(parts[1], 10);
-                return new Date(year, month - 1);
-            }
-            return new Date(0);
-        }
+  // wheels: round tire, painted rim, chrome spokes, disc brake
+  const wheelAt = z => {
+    const g = new THREE.Group(); g.rotation.order = 'YXZ'; g.position.set(0, 0.55, z);
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.13, 14, 32), rubber); tire.rotation.y = Math.PI / 2; tire.castShadow = true; g.add(tire);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.035, 8, 32), paint); rim.rotation.y = Math.PI / 2; g.add(rim);
+    for (let i = 0; i < 6; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.64, 0.035), chrome); sp.rotation.x = i * Math.PI / 6; g.add(sp); }
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.2, 12), chrome); hub.rotation.z = Math.PI / 2; g.add(hub);
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.02, 20), chrome); disc.rotation.z = Math.PI / 2; disc.position.x = 0.09; g.add(disc);
+    body.add(g); return g;
+  };
+  const front = wheelAt(1.05), rear = wheelAt(-0.95);
+  const fender = (z, start) => { const g = new THREE.Group(); g.position.set(0, 0.55, z); g.rotation.y = Math.PI / 2;
+    const f = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.06, 6, 20, Math.PI * 0.55), paint); f.rotation.z = start; f.scale.set(1, 1, 2.2); f.castShadow = true; g.add(f); body.add(g); };
+  fender(1.05, Math.PI * 0.2); fender(-0.95, Math.PI * 0.25);
 
-        const CERT_DATA = [
-            { name: "Certified Red Team Expert (CRTE)", date: "Sep 2025", type: "Red" },
-            { name: "Supervised ML (Scikit-Learn)", date: "Apr 2025", type: "AI" },
-            { name: "Web App Pentester Extreme (eWPTXv2)", date: "Oct 2024", type: "Red" },
-            { name: "Certified Cloud Security Practitioner (CCSP-AWS)", date: "Jun 2024", type: "Cloud" },
-            { name: "AWS Certified Security Specialty", date: "Jan 2024", type: "Cloud" },
-            { name: "Microsoft Azure Security (AZ-500)", date: "Jan 2024", type: "Cloud" },
-            { name: "Microsoft SC-900", date: "Jan 2024", type: "Cloud" },
-            { name: "210W-05 ICS Cybersecurity Risk", date: "Sep 2023", type: "Specialized" },
-            { name: "Network Essentials (CISCO)", date: "Apr 2023", type: "Foundation" },
-            { name: "Certified Ethical Hacker (Practical)", date: "Mar 2023", type: "Red" },
-            { name: "ISEA Certified Cyber Hygiene Practitioner", date: "Feb 2023", type: "Foundation" },
-            { name: "Certified AppSec Practitioner", date: "Feb 2023", type: "Foundation" },
-            { name: "Python Programming (edX)", date: "Feb 2023", type: "Foundation" },
-            { name: "Automation Scripts Using Bash (Coursera)", date: "Sep 2022", type: "Foundation" },
-            { name: "Hardware Security (Coursera)", date: "Sep 2022", type: "Specialized" }
-        ].sort((a, b) => parseDate(b.date) - parseDate(a.date)); // Sort Descending
+  // chassis
+  tube([0, 1.3, 0.74], [0, 0.72, -0.25], 0.06, black);                      // main frame
+  [-0.13, 0.13].forEach(x => { tube([x, 1.38, 0.72], [x, 0.55, 1.05], 0.045, chrome); tube([x, 0.62, -0.25], [x, 0.55, -0.95], 0.04, black); });
+  part(new THREE.BoxGeometry(0.42, 0.4, 0.55), black, [0, 0.66, 0.08]);      // engine
+  [-0.23, 0.23].forEach(x => part(new THREE.CylinderGeometry(0.15, 0.15, 0.08, 16), chrome, [x, 0.66, 0.1], [0, 0, Math.PI / 2]));
+  for (let i = 0; i < 4; i++) part(new THREE.BoxGeometry(0.46, 0.025, 0.4), chrome, [0, 0.82 + i * 0.05, 0.05]);
+  tube([0.2, 0.52, 0.05], [0.26, 0.72, -1.0], 0.06, chrome);                  // exhaust
+  part(new THREE.CylinderGeometry(0.08, 0.07, 0.22, 12), black, [0.26, 0.74, -1.08], [Math.PI / 2 - 0.2, 0, 0]);
 
-        const AWARD_DATA = [
-            { rank: "TOP 5", name: "BTU Hackathon", date: "Jun 2024", type: "Green" },
-            { rank: "TOP 10", name: "KRMU Hacks & Ideathon AICTE", date: "Feb 2023", type: "Gray" },
-            { rank: "2ND PLACE", name: "Technovation", date: "Dec 2022", type: "Green" },
-            { rank: "1ST PLACE", name: "Smart Punjab Hackathon", date: "Nov 2022", type: "Green" },
-            { rank: "1ST PLACE", name: "US Airforce Steganography CTF, MLH.io", date: "Nov 2020", type: "Red" },
-            { rank: "2ND PLACE", name: "Agritech Hackathon", date: "Nov 2020", type: "Green" },
-            { rank: "PARTICIPATION", name: "HackUMBC", date: "Nov 2020", type: "Gray" },
-            { rank: "PARTICIPATION", name: "NextSTEP Hackathons", date: "Nov 2020", type: "Gray" }
-        ].sort((a, b) => parseDate(b.date) - parseDate(a.date)); // Sort Descending
+  // bodywork
+  part(new THREE.SphereGeometry(1, 24, 16), paint, [0, 1.2, 0.34], [-0.15, 0, 0], [0.3, 0.2, 0.44]);       // tank
+  part(new THREE.BoxGeometry(0.04, 0.03, 0.6), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }), [0, 1.405, 0.32], [-0.15, 0, 0]);
+  part(new THREE.SphereGeometry(1, 24, 16), paint, [0, 1.33, 0.84], [0.25, 0, 0], [0.28, 0.3, 0.24]);       // fairing
+  part(new THREE.BoxGeometry(0.42, 0.3, 0.02), glass, [0, 1.62, 0.86], [-0.55, 0, 0]);                      // windscreen
+  part(new THREE.CylinderGeometry(0.11, 0.12, 0.06, 20), new THREE.MeshStandardMaterial({ color: 0xfffbe6, emissive: 0xfff1b8, emissiveIntensity: 1.2 }), [0, 1.3, 1.07], [Math.PI / 2, 0, 0]);
+  const seat = part(new THREE.CapsuleGeometry(0.13, 0.5, 4, 12), leather, [0, 1.13, -0.3], [Math.PI / 2 + 0.08, 0, 0], [1.35, 1, 1]);
+  part(new THREE.SphereGeometry(1, 20, 12), paint, [0, 1.12, -0.78], [0.2, 0, 0], [0.19, 0.11, 0.34]);     // tail
+  const brake = part(new THREE.BoxGeometry(0.2, 0.06, 0.04), new THREE.MeshStandardMaterial({ color: 0xff3b30, emissive: 0xff3b30, emissiveIntensity: 0.5 }), [0, 1.12, -1.11]);
+  tube([-0.4, 1.5, 0.7], [0.4, 1.5, 0.7], 0.025, black);                     // handlebar
+  [-0.4, 0.4].forEach(x => { tube([x * 0.9, 1.5, 0.7], [x * 1.05, 1.5, 0.7], 0.035, rubber); tube([x * 0.7, 1.5, 0.7], [x * 0.8, 1.72, 0.66], 0.012, black); part(new THREE.SphereGeometry(0.05, 10, 8), chrome, [x * 0.8, 1.74, 0.66], [0, 0, 0], [1.4, 0.8, 0.5]); });
 
-        // Helper to generate Cert HTML
-        function generateCertHtml(cert) {
-            let color = 'text-gray-400';
-            if (cert.type === 'Red') color = 'text-red-400';
-            else if (cert.type === 'Cloud') color = 'text-blue-400';
-            else if (cert.type === 'AI') color = 'text-green-400';
-            else if (cert.type === 'Specialized') color = 'text-orange-400';
+  // rider
+  const hipL = [-0.16, 1.25, -0.32], hipR = [0.16, 1.25, -0.32];
+  [[hipL, -1], [hipR, 1]].forEach(([hip, s]) => {
+    const knee = [s * 0.24, 1.05, 0.12], foot = [s * 0.24, 0.66, -0.08];
+    tube(hip, knee, 0.085, pants, true); tube(knee, foot, 0.075, pants, true);
+    part(new THREE.BoxGeometry(0.12, 0.1, 0.24), black, [foot[0], foot[1] - 0.04, foot[2] + 0.06]);
+    const sh = [s * 0.21, 1.86, -0.02], el = [s * 0.3, 1.66, 0.34], hand = [s * 0.36, 1.53, 0.66];
+    tube(sh, el, 0.07, jacket, true); tube(el, hand, 0.06, jacket, true);
+    part(new THREE.SphereGeometry(0.06, 10, 8), black, hand);
+  });
+  tube([0, 1.28, -0.3], [0, 1.88, 0.0], 0.2, jacket, true);                  // torso leaning forward
+  part(new THREE.BoxGeometry(0.36, 0.05, 0.3), paint, [0, 1.68, -0.13], [-0.45, 0, 0]);   // jacket stripe
+  tube([0, 1.95, 0.05], [0, 2.03, 0.1], 0.07, pants);                        // neck
+  part(new THREE.SphereGeometry(0.21, 24, 18), new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.25, clearcoat: 1 }), [0, 2.16, 0.14]);
+  part(new THREE.SphereGeometry(0.215, 24, 12, Math.PI / 2 - 0.7, 1.4, 1.0, 0.6), visorM, [0, 2.16, 0.14]);
+  part(new THREE.TorusGeometry(0.21, 0.025, 6, 24, Math.PI), paint, [0, 2.16, 0.14], [0, Math.PI / 2, 0]);  // helmet stripe
 
-            return `
-                <div class="cert-list-item">
-                    <span class="${color} font-semibold">${cert.name}</span>
-                    <span class="text-gray-600 text-[11px]">${cert.date}</span>
-                </div>
-            `;
-        }
-        
-        // Helper to generate Award HTML
-        function generateAwardHtml(award) {
-            let rankClass = 'text-gray-400 font-bold';
-            let nameClass = 'text-gray-300';
-            if (award.type === 'Green') {
-                rankClass = 'text-green-400 font-bold';
-                nameClass = 'text-white';
-            } else if (award.type === 'Red') {
-                rankClass = 'text-red-400 font-bold';
-                nameClass = 'text-white';
-            }
+  return { root, body, wheels: [front, rear], steer: [front], wheelR: 0.55, brakes: [brake], paints: [paint] };
+}
+function makeTruck() {
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const paint = M(0xff6b35), dark = M(0x2b303b);
+  const a = (g, m, x, y, z) => { const o = mesh(g, m, x, y, z); body.add(o); return o; };
+  a(new THREE.BoxGeometry(2.2, 0.5, 5), dark, 0, 0.75, 0);
+  a(new THREE.BoxGeometry(2.2, 1.7, 2), paint, 0, 1.85, 1.2);
+  a(new THREE.BoxGeometry(2.0, 0.8, 0.08), M(0x9fd3ef, { roughness: 0.2, metalness: 0.3 }), 0, 2.2, 2.22);
+  a(new THREE.BoxGeometry(2.2, 0.9, 1.1), paint, 0, 1.45, 2.65);
+  a(new THREE.BoxGeometry(2.3, 1.1, 2.6), M(0xfff1d6), 0, 1.55, -1.25);
+  [-0.7, 0.7].forEach(x => a(new THREE.BoxGeometry(0.4, 0.25, 0.06), M(0xfff7d6, { emissive: 0xfff2b3, emissiveIntensity: 0.6 }), x, 1.5, 3.21));
+  const brakes = [-0.8, 0.8].map(x => a(new THREE.BoxGeometry(0.35, 0.2, 0.06), M(0xff3b30, { emissive: 0xff3b30, emissiveIntensity: 0.4 }), x, 1.2, -2.56));
+  const wheels = [], steer = [];
+  [[1.7, true], [-1.6, false]].forEach(([z, f]) => [-1.1, 1.1].forEach(x => { const w = wheel(0.6, 0.45); w.position.set(x, 0.6, z); body.add(w); wheels.push(w); if (f) steer.push(w); }));
+  return { root, body, wheels, steer, wheelR: 0.6, brakes, paints: [paint] };
+}
+const rides = { bike: makeBike(), truck: makeTruck() };
+Object.values(rides).forEach(r => { r.root.visible = false; add(r.root); });
+const headlight = new THREE.SpotLight(0xfff2cc, 0, 40, 0.5, 0.6, 1.4); add(headlight, headlight.target);
 
-            return `
-                <div class="flex justify-between items-center bg-white/5 p-2 rounded border border-white/5">
-                    <span class="${rankClass} font-bold mr-3 shrink-0">${award.rank}</span>
-                    <span class="${nameClass} flex-grow">${award.name}</span>
-                    <span class="text-gray-500 text-xs font-mono ml-2 shrink-0">${award.date}</span>
-                </div>
-            `;
-        }
+const car = { pos: new THREE.Vector3(0, 0, 6), y: 0, vy: 0, grounded: true, heading: Math.PI, speed: 0, steer: 0, boost: 1, air: 0, lastArea: 'spawn',
+  get s() { return SPECS[state.ride]; }, get m() { return rides[state.ride]; } };
 
-        // --- UI Functions ---
-        function createEventHtml(event) {
-            let roleClass = "text-gray-500";
-            if(event.role === "SPEAKER") roleClass = "text-red-400 font-bold";
-            else if(event.role === "DELEGATE") roleClass = "text-blue-400 font-bold";
+/* =====================================================================
+   AUDIO (tiny synth: honk & chimes)
+   ===================================================================== */
+let actx;
+function beep(freqs, dur = 0.18, type = 'square', vol = 0.06) {
+  try {
+    actx ||= new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.value = f; g.gain.value = vol;
+      g.gain.setTargetAtTime(0, actx.currentTime + i * dur + dur * 0.7, 0.04); o.connect(g).connect(actx.destination); o.start(actx.currentTime + i * dur); o.stop(actx.currentTime + (i + 1) * dur + 0.1); });
+  } catch (e) {}
+}
 
-            return `
-                <div class="flex justify-between items-start text-sm">
-                    <div class="flex-grow">
-                        <p class="text-gray-300 font-medium">${event.name}</p>
-                        <p class="text-[10px] font-mono ${roleClass}">[${event.role}]</p>
-                    </div>
-                    <span class="text-xs font-mono text-gray-600 whitespace-nowrap ml-2 shrink-0">${event.date}</span>
-                </div>
-            `;
-        }
+/* =====================================================================
+   INPUT
+   ===================================================================== */
+const keys = { up: 0, down: 0, left: 0, right: 0, brake: 0, boost: 0, jump: 0 };
+const KEYMAP = { KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down', KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right', KeyB: 'brake', ControlLeft: 'brake', ShiftLeft: 'boost', ShiftRight: 'boost', Space: 'jump' };
+const OVERLAYS = ['intro', 'map', 'sheet', 'board', 'rules', 'reader'];
+const modalOpen = () => OVERLAYS.some(id => $(id).classList.contains('open'));
+let started = false;
+const clearKeys = () => { Object.keys(keys).forEach(k => keys[k] = 0); document.querySelectorAll('#touch button').forEach(b => b.classList.remove('on')); };
 
-        function renderEvents() {
-            const today = new Date(); 
-            const upcoming = [], past = [];
-            
-            ALL_EVENTS.map(e => ({...e, d: new Date(e.date)})).sort((a,b)=>b.d-a.d).forEach(e => {
-                if(e.d < today) past.push(e); else upcoming.push(e);
-            });
+addEventListener('keydown', e => {
+  if (e.code === 'Escape') { if (modalOpen()) closeModals(); else if (focus) exitFocus(); else closeDrawer(); return; }
+  if (started && !modalOpen() && e.code === 'KeyE' && !e.repeat) { if (focus) exitFocus(); else if (nearFocus) enterFocus(nearFocus); return; }
+  if (started && (e.code === 'Enter' || e.code === 'NumpadEnter') && !e.repeat) {
+    if ($('reader').classList.contains('open')) { $('reader').classList.remove('open'); showPrompt(); }
+    else if (!modalOpen() && (nearFocus || focus || $('drawer').classList.contains('open'))) openReader();
+    e.preventDefault(); return;
+  }
+  if (focus && ['KeyW', 'ArrowUp', 'KeyS', 'ArrowDown'].includes(e.code)) exitFocus();
+  const toggles = { KeyM: 'map', KeyC: 'sheet', KeyL: 'board' };
+  if (started && toggles[e.code]) { const id = toggles[e.code], was = $(id).classList.contains('open'); closeModals(); if (!was) openModal(id); return; }
+  if (!started || modalOpen()) return;
+  if (KEYMAP[e.code]) { keys[KEYMAP[e.code]] = 1; e.preventDefault(); }
+  if (e.repeat) return;
+  if (e.code === 'KeyR') respawn();
+  if (e.code === 'KeyH') honk();
+  if (e.code === 'KeyV') swapRide();
+  if (e.code === 'KeyP') cyclePaint();
+  if (e.code === 'KeyN') toggleNight();
+});
+addEventListener('keyup', e => { if (KEYMAP[e.code]) keys[KEYMAP[e.code]] = 0; });
+addEventListener('blur', clearKeys);
+document.querySelectorAll('#touch button').forEach(b => {
+  const on = e => { e.preventDefault(); keys[b.dataset.k] = 1; b.classList.add('on'); }, off = e => { e.preventDefault(); keys[b.dataset.k] = 0; b.classList.remove('on'); };
+  b.addEventListener('pointerdown', on); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, off));
+  b.addEventListener('contextmenu', e => e.preventDefault());
+});
 
-            document.getElementById('upcoming-events-container').innerHTML = upcoming.length 
-                ? upcoming.map(createEventHtml).join('') 
-                : '<div class="text-xs text-gray-600 italic">No upcoming intel.</div>';
-            
-            if(past.length > 0) {
-                document.getElementById('past-events-visible').innerHTML = past.slice(0, 3).map(createEventHtml).join('');
-                document.getElementById('past-events-hidden').innerHTML = past.slice(3).map(createEventHtml).join('');
-                document.getElementById('toggle-past-events-btn').style.display = 'block';
-                document.getElementById('toggle-past-events-btn').innerText = `[+] EXPAND ARCHIVE (${past.length - 3} MORE)`;
-            } else {
-                document.getElementById('past-events-visible').innerHTML = '<p class="text-gray-500 text-sm italic">No historical events.</p>';
-            }
-            
-            // Inject Certs and Awards
-            document.getElementById('certs-list').innerHTML = CERT_DATA.map(generateCertHtml).join('');
-            document.getElementById('awards-list').innerHTML = AWARD_DATA.map(generateAwardHtml).join('');
-        }
+const clock = new THREE.Clock();
+const cam = { yaw: 0, pitch: 0.48, dist: 16, lastDrag: -10 };
+let drag = null, downAt = null;
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function pick(e) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hitObj = ray.intersectObjects(clickables, true)[0]?.object;
+  for (let o = hitObj; o; o = o.parent) if (o.userData.click) return o.userData.click;
+  return null;
+}
+let hoverT = 0;
+canvas.addEventListener('pointermove', e => {
+  if (drag || !started || performance.now() - hoverT < 50) return; hoverT = performance.now();
+  const c = pick(e), tip = $('tip');
+  canvas.style.cursor = c ? 'pointer' : 'grab';
+  if (c) { tip.textContent = c.label; tip.style.left = e.clientX + 'px'; tip.style.top = e.clientY + 'px'; tip.classList.add('show'); } else tip.classList.remove('show');
+});
+canvas.addEventListener('pointerleave', () => $('tip').classList.remove('show'));
+canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; downAt = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointermove', e => {
+  if (!drag) return;
+  cam.yaw -= (e.clientX - drag.x) * 0.006; cam.pitch = THREE.MathUtils.clamp(cam.pitch + (e.clientY - drag.y) * 0.004, 0.35, 1.35);
+  drag = { x: e.clientX, y: e.clientY }; cam.lastDrag = clock.elapsedTime;
+});
+canvas.addEventListener('pointerup', e => {
+  drag = null;
+  if (started && downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) pick(e)?.act();
+  downAt = null;
+});
+canvas.addEventListener('wheel', e => { cam.dist = THREE.MathUtils.clamp(cam.dist + e.deltaY * 0.02, 10, 60); e.preventDefault(); }, { passive: false });
 
-        function togglePastEvents() {
-            const el = document.getElementById('past-events-hidden');
-            const btn = document.getElementById('toggle-past-events-btn');
-            el.classList.toggle('hidden');
-            btn.innerText = el.classList.contains('hidden') ? `[+] EXPAND ARCHIVE` : `[-] COLLAPSE ARCHIVE`;
-        }
+const lockMsg = k => { const i = LEVELS.findIndex(l => l.key === k); toast(`${LEVELS[i].unlock[0]} unlocks at <b>LV ${i + 1}</b> (${LEVELS[i].pts} pts)`, '#8a91a1'); };
+function setRide(r) { if (r === 'truck' && !has('truck')) r = 'bike'; state.ride = r; save(); Object.entries(rides).forEach(([k, m]) => m.root.visible = k === r); $('ride-name').textContent = SPECS[r].name; }
+function swapRide() { if (!has('truck')) return lockMsg('truck'); setRide(state.ride === 'bike' ? 'truck' : 'bike'); toast(`Now driving the <b>${SPECS[state.ride].name.toLowerCase()}</b>`); }
+function applyPaint() { if (state.paint === PAINTS.length - 1 && !has('gold')) state.paint = 0; Object.values(rides).forEach(m => m.paints.forEach(p => p.color.setHex(PAINTS[state.paint][1]))); }
+function cyclePaint() { if (!has('paint')) return lockMsg('paint'); state.paint = (state.paint + 1) % (has('gold') ? PAINTS.length : PAINTS.length - 1); save(); applyPaint(); toast(`Paint: <b>${PAINTS[state.paint][0]}</b>`, '#' + PAINTS[state.paint][1].toString(16).padStart(6, '0')); }
+function toggleNight() { if (!has('night')) return lockMsg('night'); state.night = !state.night; save(); }
+function honk() { beep([392, 330], 0.14, 'sawtooth', 0.05); state.honks++; if (state.honks >= 10) achieve('honk'); save(); }
+function respawn(silent) {
+  const a = AREA[car.lastArea] || AREA.spawn;
+  if (a.id === 'spawn') { car.pos.set(0, 0, 6); car.heading = Math.PI; }
+  else if (a.id === 'career') { car.pos.set(0, 0, -16); car.heading = Math.PI; }
+  else { const [x, z] = a.c, l = Math.hypot(x, z), back = Math.min(16, a.r - 2); car.pos.set(x - x / l * back, 0, z - z / l * back); car.heading = Math.atan2(x, z); }
+  car.speed = 0; car.vy = 0; car.y = groundAt(car.pos.x, car.pos.z); car.grounded = true;
+  if (!silent) toast('Respawned.');
+}
 
-        function toggleBlogEvents() {
-            const el = document.getElementById('additional-blogs');
-            const btn = document.getElementById('toggle-blogs-btn');
-            el.classList.toggle('hidden');
-            btn.innerText = el.classList.contains('hidden') ? `[+] EXPAND LOGS` : `[-] COLLAPSE LOGS`;
-        }
-        
-        function scrollToContact(e) {
-            e.preventDefault();
-            const element = document.getElementById('contact');
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
+/* =====================================================================
+   UI
+   ===================================================================== */
+function toast(html, color, big) { const t = document.createElement('div'); t.className = 'toast' + (big ? ' big' : ''); if (color) t.style.setProperty('--c', color); t.innerHTML = html; $('toasts').appendChild(t); setTimeout(() => t.remove(), 3500); }
+function closeModals() { if (started) OVERLAYS.forEach(id => $(id).classList.remove('open')); else $('rules').classList.remove('open'); }
+function openModal(id) { clearKeys(); ({ map: buildMap, sheet: buildSheet, board: buildBoard })[id]?.(); $(id).classList.add('open'); }
 
-        // Run rendering logic on page load
-        window.onload = renderEvents;
-    </script>
+// Drawer shows the area you're in; driving continues underneath
+let drawerFor = null, drawerDismissed = null;
+function openDrawer(key, { kicker, head, meta, body, color, challenge, flagId }) {
+  drawerFor = key;
+  const d = $('drawer'); d.style.setProperty('--c', color);
+  $('d-kicker').textContent = kicker; $('d-title').textContent = head; $('d-meta').textContent = meta;
+  const got = flagId === 'root' ? state.root : flagId && state.flags.includes(flagId);
+  $('d-body').innerHTML = body() + (challenge ? `<div class="challenge"><b>${got ? '🚩 FLAG CAPTURED ✓' : `🚩 FLAG CHALLENGE · +${flagId === 'root' ? PTS.root : PTS.flag}`}</b>${challenge}</div>` : '');
+  $('d-body').scrollTop = 0; d.classList.add('open'); d.classList.remove('min'); $('drawer-min').textContent = '–';
+}
+function closeDrawer() { if (drawerFor) drawerDismissed = drawerFor; $('drawer').classList.remove('open'); drawerFor = null; }
+$('drawer-x').onclick = closeDrawer;
+function openReader() {
+  if (!$('drawer').classList.contains('open') || (nearFocus && !focus && nearFocus.act && drawerFor !== nearFocus.key)) nearFocus?.act?.();
+  if (!$('drawer').classList.contains('open')) return;
+  const r = $('reader-body');
+  r.style.setProperty('--c', $('drawer').style.getPropertyValue('--c'));
+  r.innerHTML = `<button class="x" data-close>×</button><div class="kicker">${esc($('d-kicker').textContent)}</div><h2>${esc($('d-title').textContent)}</h2>
+    <div class="meta">${esc($('d-meta').textContent)}</div><div class="body" style="margin-top:12px">${$('d-body').innerHTML}</div>
+    <p class="meta" style="margin-top:16px">Press <kbd>Esc</kbd> or <kbd>Enter</kbd> to close</p>`;
+  r.scrollTop = 0; clearKeys(); $('reader').classList.add('open'); showPrompt();
+}
+$('drawer-big').onclick = e => { e.stopPropagation(); openReader(); };
+const toggleMin = () => { const d = $('drawer'); d.classList.toggle('min'); $('drawer-min').textContent = d.classList.contains('min') ? '+' : '–'; };
+$('drawer-min').onclick = e => { e.stopPropagation(); toggleMin(); };
+document.querySelector('#drawer header').addEventListener('click', e => { if ($('drawer').classList.contains('min') && !e.target.closest('button')) toggleMin(); });
+const areaDrawer = a => openDrawer(a.id, { kicker: a.kicker, head: a.head, meta: a.meta, body: a.body, color: a.color, challenge: a.challenge, flagId: a.id });
+const jobDrawer = j => openDrawer('job:' + j.id, { kicker: j.date, head: j.role, meta: j.org, body: j.body, color: j.color });
+
+// One entry point for progress: points, level-ups, unlocks, score sync
+function progress(change, msg, color) {
+  const before = level(); change(); save();
+  if (msg) toast(msg, color);
+  const after = level();
+  for (let l = before + 1; l <= after; l++) { const L = LEVELS[l - 1]; setTimeout(() => { toast(`Level ${l} · <b>${L.title}</b>${L.unlock ? `<br>Unlocked: ${L.unlock[0]} (${L.unlock[1]})` : ''}`, '#f5b301', true); beep([523, 659, 784], 0.1, 'triangle', 0.05); }, 600 * (l - before)); }
+  if (after !== before) { applyPaint(); refreshTouch(); }
+  if (points() === MAX_PTS && !state.clearSec) { state.clearSec = Math.max(1, Math.round(state.playSec)); save(); if (state.clearSec < 360) achieve('speedrun'); }
+  refresh(); submitScore();
+}
+const ACH = [
+  ['first', '🚩', 'First flag', 'Capture your first flag'], ['speed', '💨', 'Top speed', 'Reach 120 km/h'], ['air', '🛫', 'Airtime', 'Stay airborne for 1.5 seconds'],
+  ['wreck', '💥', 'Demolition', 'Knock over 25 objects'], ['coins', '🪙', 'Collector', 'Find all 13 coins'], ['root', '👑', 'Root access', 'Capture the root flag'],
+  ['speedrun', '⏱', 'Speedrunner', 'Complete the island in under 6 minutes'], ['honk', '📯', 'Honk', 'Honk 10 times'],
+];
+function achieve(id) { if (state.ach.includes(id)) return; state.ach.push(id); save(); const a = ACH.find(x => x[0] === id); toast(`Achievement unlocked · <b>${a[2]}</b>`, '#16a34a'); }
+
+function capture(a) {
+  beep([660, 880, 1320], 0.12, 'triangle', 0.06);
+  if (a.id === 'root') progress(() => state.root = true, `Root flag captured · +${PTS.root}`, '#1f2430');
+  else progress(() => state.flags.push(a.id), `Flag captured · <b>${a.name}</b> · +${PTS.flag}`, a.color);
+  achieve(a.id === 'root' ? 'root' : 'first');
+  if (a.id !== 'root' && flagsHeld() === 6) setTimeout(() => toast('All six flags captured. The <b>root flag</b> has appeared on Root Hill.', '#1f2430', true), 1200);
+  if (drawerFor === a.id) areaDrawer(a);
+}
+const challengeDone = id => ({ career: JOBS.every(j => state.gates.includes(j.id)), research: state.drone, workshop: state.rack, vault: state.firewall, campus: state.jumped, contact: true, root: flagsHeld() === 6 }[id]);
+const challengeHint = id => ({ career: `Pass all ${JOBS.length} career gates first (${JOBS.filter(j => state.gates.includes(j.id)).length}/${JOBS.length}).`, research: 'Catch the drone first.', workshop: 'Knock over the server rack first.',
+  vault: 'Break through the firewall first.', campus: 'Jump the campus ramp first (0.7 seconds of airtime).', root: `Capture all six flags first (${flagsHeld()}/6).` }[id]);
+
+function refresh() {
+  const p = points(), lv = level(), L = LEVELS[lv - 1], N = LEVELS[lv];
+  $('h-lvl').textContent = lv; $('h-title').textContent = L.title; $('h-pts').textContent = `${p} pts`;
+  $('h-bar').style.width = N ? `${(p - L.pts) / (N.pts - L.pts) * 100}%` : '100%';
+  $('h-flags').innerHTML = FLAG_AREAS.map(a => `<b class="${state.flags.includes(a.id) ? 'on' : ''}" style="--c:${a.color}" title="${a.name}">${state.flags.includes(a.id) ? '✓' : ''}</b>`).join('') +
+    `<b class="${state.root ? 'on' : ''}" style="--c:#1f2430" title="Root">${state.root ? '★' : ''}</b><span>🪙 ${state.coins.length}/${HOF.length}</span>`;
+  $('boostbar').style.display = has('boost') ? 'block' : 'none';
+  AREAS.forEach(a => {
+    const f = flagObjs[a.id]; if (!f) return;
+    const got = a.id === 'root' ? state.root : state.flags.includes(a.id);
+    f.cloth.material.color.set(got ? '#16a34a' : a.color); f.ring.visible = !got;
+    if (a.id === 'root') { f.g.visible = flagsHeld() === 6 || state.root; f.ring.visible = flagsHeld() === 6 && !state.root; }
+  });
+  { const { got, max } = skillProgress(); skillOrbs.forEach(o => o.mat.emissiveIntensity = 0.2 + 1.6 * got[o.key] / max[o.key]); }
+  plaques.forEach(p => p.mat.emissiveIntensity = state.coins.includes(p.name) ? 0.6 : 0);
+  pins.forEach(({ a, el }) => { const got = a.id === 'root' ? state.root : state.flags.includes(a.id); const small = el.querySelector('small'); if (small) small.textContent = a.flag && got ? '✓' : ''; });
+}
+function refreshTouch() { ['boost', 'jump'].forEach(k => document.querySelector(`#touch [data-k="${k}"]`).classList.toggle('locked', !has(k))); }
+
+const pins = AREAS.filter(a => a.id !== 'spawn').map(a => {
+  const el = document.createElement('div'); el.className = 'pin'; el.style.setProperty('--c', a.color);
+  el.innerHTML = `<i></i>${a.name}<small></small>`;
+  const [x, z] = a.c; const o = new CSS2DObject(el); o.position.set(x, 13, z); add(o);
+  return { a, el, x, z };
+});
+
+/* ---- map ---- */
+let markers = [];
+function buildMap() {
+  $('places').innerHTML = AREAS.filter(a => !a.hidden || flagsHeld() === 6).map(a => {
+    const got = a.id === 'root' ? state.root : state.flags.includes(a.id);
+    return `<button data-go="${a.id}" style="--c:${a.color}"><i></i>${a.name}<small class="${got ? 'ok' : ''}">${got ? '✓ captured' : a.flag ? '🚩' : ''}</small></button>`;
+  }).join('');
+  drawMap(bmx, bm.width, true);
+}
+function drawMap(ctx, W, big) {
+  const S = W / 2 / 150, P = (x, z) => [W / 2 + x * S, W / 2 + z * S];
+  const g = ctx.createRadialGradient(W / 2, W / 2, W * 0.2, W / 2, W / 2, W * 0.75); g.addColorStop(0, '#8fd3e8'); g.addColorStop(1, '#4fb0cf');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, W);
+  const blob = (extra, color) => { ctx.beginPath(); for (let i = 0; i <= 120; i++) { const t = i / 120 * Math.PI * 2, r = shoreR(t) + extra; const [x, y] = P(r * Math.cos(t), -r * Math.sin(t)); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.fillStyle = color; ctx.fill(); };
+  blob(SAND + 4, 'rgba(255,255,255,.55)'); blob(SAND, '#f3dfae'); blob(0, '#9fd47e');
+  ctx.fillStyle = '#b07a4f'; { const [x, y] = P(-PIER.x, PIER.z0); ctx.fillRect(x, y, PIER.x * 2 * S, (PIER.z1 - PIER.z0) * S); }
+  ctx.fillStyle = '#b8d98f'; ctx.beginPath(); ctx.arc(...P(HILL.x, HILL.z), HILL.r * S, 0, Math.PI * 2); ctx.fill();
+  ctx.lineCap = 'round';
+  [[ROAD_W + 2, '#e8c99a'], [ROAD_W, '#fff6e4']].forEach(([w, c]) => { ctx.strokeStyle = c; ctx.lineWidth = w * S; SEGS.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(...P(...a)); ctx.lineTo(...P(...b)); ctx.stroke(); }); });
+  if (big) markers = [];
+  AREAS.forEach(a => {
+    if (a.hidden && flagsHeld() < 6) return;
+    const [x, y] = P(...a.c), got = a.id === 'root' ? state.root : state.flags.includes(a.id), r = big ? 20 : 9;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = a.color; ctx.fill();
+    ctx.lineWidth = big ? 4 : 2.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+    if (a.flag) { ctx.fillStyle = '#fff'; ctx.font = `700 ${big ? 18 : 10}px Space Grotesk, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(got ? '✓' : '⚑', x, y + 1); }
+    if (big) {
+      ctx.font = '700 22px Space Grotesk, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const tw = ctx.measureText(a.name).width + 22, ly = a.labelAbove ? y - r - 42 : y + r + 10;
+      ctx.fillStyle = 'rgba(255,253,248,.95)'; ctx.beginPath(); ctx.roundRect(x - tw / 2, ly, tw, 32, 16); ctx.fill();
+      ctx.fillStyle = '#1f2430'; ctx.fillText(a.name, x, ly + 16);
+      markers.push({ id: a.id, x, y, r: r + 18 });
+    }
+  });
+  ctx.save(); ctx.translate(...P(car.pos.x, car.pos.z)); ctx.rotate(-car.heading);
+  const k = big ? 2.2 : 1.4; ctx.fillStyle = '#ff6b35'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(0, 9 * k); ctx.lineTo(6 * k, -6 * k); ctx.lineTo(0, -3 * k); ctx.lineTo(-6 * k, -6 * k); ctx.closePath(); ctx.stroke(); ctx.fill();
+  ctx.restore();
+}
+const mm = $('minimap'), mmx = mm.getContext('2d'), bm = $('bigmap'), bmx = bm.getContext('2d');
+const hit = e => { const r = bm.getBoundingClientRect(), k = bm.width / r.width, x = (e.clientX - r.left) * k, y = (e.clientY - r.top) * k; return markers.find(m => Math.hypot(m.x - x, m.y - y) < m.r); };
+bm.onclick = e => { const h = hit(e); if (h) travel(h.id); };
+bm.onmousemove = e => bm.style.cursor = hit(e) ? 'pointer' : 'default';
+function travel(id) { car.lastArea = id; respawn(true); closeModals(); cam.yaw = car.heading + Math.PI; snapCam(); }
+
+/* ---- skills sheet ---- */
+function buildSheet() {
+  const lv = level(), { got, max } = skillProgress();
+  $('sheet-body').innerHTML = `<button class="x" data-close>×</button><div class="kicker">Character</div><h2>LV ${lv} · ${LEVELS[lv - 1].title}</h2>
+    <p class="meta">${points()} / ${MAX_PTS} pts · ${flagsHeld()}/6 flags · ${state.coins.length}/13 coins · played ${Math.floor(state.playSec / 60)}m ${Math.round(state.playSec % 60)}s</p>
+    <h3>Skills: each flag levels them up</h3>
+    ${SKILLS.map(s => `<div class="skill"><div class="top">${s.name}<span>LV ${got[s.key]}/${max[s.key]}</span></div><div class="bar" style="--c:${s.color}"><i style="width:${got[s.key] / max[s.key] * 100}%"></i></div></div>`).join('')}
+    <p style="margin-top:8px;font-size:13px">Full skill lists are on the <b>Skill Tree</b> next to spawn.</p>
+    <h3>Unlocks</h3>${rows(LEVELS.filter(l => l.unlock).map(l => [`${lv >= LEVELS.indexOf(l) + 1 ? '✓' : 'Locked ·'} <b>${l.unlock[0]}</b> · ${l.unlock[1]}`, `LV ${LEVELS.indexOf(l) + 1}`]))}
+    <h3>Achievements</h3><div class="grid2">${ACH.map(([id, ic, n, d]) => `<div class="ach ${state.ach.includes(id) ? 'on' : ''}"><i>${ic}</i><span><b>${n}</b>${d}</span></div>`).join('')}</div>`;
+}
+
+/* ---- scoreboard & visits ---- */
+async function api(path, body) { const r = await fetch('/api' + path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined); if (!r.ok) throw new Error(r.status); return r.json(); }
+let submitT;
+function submitScore() { clearTimeout(submitT); submitT = setTimeout(() => api('/score', { pid: vid, points: points(), flags: flagsHeld(), coins: state.coins.length, root: state.root ? 1 : 0, clearSec: state.clearSec }).catch(() => {}), 1200); }
+let boardTab = 'all';
+async function buildBoard() {
+  const el = $('board-body');
+  const head = `<button class="x" data-close>×</button><div class="kicker">Scoreboard</div><h2>Top 10 explorers</h2>`;
+  el.innerHTML = head + '<p class="meta">Loading…</p>';
+  try {
+    const d = await api(`/leaderboard?pid=${encodeURIComponent(vid)}`);
+    const list = boardTab === 'week' ? d.weekly : d.top;
+    const fmt = s => s ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : '—';
+    el.innerHTML = head + `<div class="stats3"><div><b>${d.visitors}</b>visitors</div><div><b>${d.visits}</b>visits</div><div><b>${d.players}</b>explorers</div></div>
+      <div class="tabs"><button data-tab="all" class="${boardTab === 'all' ? 'on' : ''}">All time</button><button data-tab="week" class="${boardTab === 'week' ? 'on' : ''}">This week</button></div>
+      ${list.length ? `<table class="lb"><thead><tr><th>#</th><th>EXPLORER</th><th>PTS</th><th>FLAGS</th><th>CLEAR</th></tr></thead><tbody>
+      ${list.map(r => `<tr class="${r.you ? 'you' : ''}"><td class="n">${r.rank}</td><td>${flagEmoji(r.country)} ${esc(r.name)}${r.root ? '<span class="root-badge">ROOT</span>' : ''}${r.you ? ' <small style="color:var(--accent)">you</small>' : ''}</td><td><b>${r.points}</b></td><td>${r.flags}/6</td><td class="mono">${fmt(r.clearSec)}</td></tr>`).join('')}
+      </tbody></table>` : '<p>No one here yet. Be first!</p>'}
+      <p class="meta" style="margin-top:12px">${d.you ? `You are ${flagEmoji(d.you.country)} <b>${esc(d.you.name)}</b>${d.yourRank ? `, rank #${d.yourRank} all-time` : ''}.` : 'Capture a flag to get on the board. Your name & flag are assigned automatically.'}</p>`;
+    el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { boardTab = b.dataset.tab; buildBoard(); });
+  } catch (e) { el.innerHTML = head + '<p>The scoreboard is offline right now. Your progress is saved on this device.</p>'; }
+}
+
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-close]')) return closeModals();
+  const g = e.target.closest('[data-go]'); if (g) return travel(g.dataset.go);
+  const o = e.target.closest('[data-open]'); if (o) return openModal(o.dataset.open);
+});
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o && (started || o.id !== 'intro')) o.classList.remove('open'); }));
+mm.onclick = () => openModal('map');
+$('goal').onclick = () => openModal('map');
+function begin() { started = true; $('intro').classList.remove('open'); setTimeout(() => $('help').classList.add('gone'), 15000); beep([440], 0.01, 'sine', 0.001); areaDrawer(AREA.spawn); }
+$('btn-start').onclick = begin;
+
+/* =====================================================================
+   SIMULATION
+   ===================================================================== */
+const G = 34;  // gravity
+let inArea = null, prevZ = 6, leaveT;
+const shown = {};
+const once = (k, msg, c) => { const t = performance.now(); if (shown[k] && t - shown[k] < 4000) return; shown[k] = t; toast(msg, c || '#8a91a1'); };
+
+function stepCar(dt) {
+  const s = car.s, drive = started && !modalOpen() && !focus;
+  const up = drive && keys.up, down = drive && keys.down, br = drive && keys.brake;
+  const steerIn = drive ? keys.left - keys.right : 0;
+  const boosting = drive && keys.boost && up && has('boost') && car.boost > 0.02;
+  car.boost = THREE.MathUtils.clamp(car.boost + (boosting ? -0.45 : 0.15) * dt, 0, 1);
+  const road = onRoad(car.pos.x, car.pos.z) || Math.hypot(car.pos.x, car.pos.z) < 15;
+  const max = (boosting ? s.boost : s.max) * (road ? 1 : 0.82);
+  const grip = car.grounded ? 1 : 0.15;
+
+  if (up) car.speed += (car.speed < 0 ? s.brake : s.acc * (boosting ? 1.8 : 1)) * dt * grip;
+  else if (down) car.speed -= (car.speed > 0 ? s.brake : s.acc * 0.6) * dt * grip;
+  else car.speed -= Math.sign(car.speed) * Math.min(Math.abs(car.speed), 7 * dt * grip);
+  if (br) car.speed -= Math.sign(car.speed) * Math.min(Math.abs(car.speed), s.brake * 1.6 * dt);
+  if (car.speed > max) car.speed = THREE.MathUtils.lerp(car.speed, max, 1 - Math.exp(-dt * 2.5));
+  car.speed = Math.max(car.speed, -10);
+
+  car.steer = THREE.MathUtils.lerp(car.steer, steerIn, 1 - Math.exp(-dt * 14));
+  // tight turns when slow (you can pivot out of corners), calmer turns at top speed
+  const sp = Math.abs(car.speed), turnK = sp < 0.5 ? 0.45 : Math.min(1, 0.45 + sp / 8) * (1 - Math.min(0.3, sp / 120));
+  car.heading += car.steer * s.turn * turnK * (car.speed < -0.5 ? -1 : 1) * dt * (car.grounded ? 1 : 0.4);
+
+  // move; if a ledge blocks the full step, slide along whichever axis is free
+  const px = car.pos.x, pz = car.pos.z;
+  const nx = px + Math.sin(car.heading) * car.speed * dt, nz = pz + Math.cos(car.heading) * car.speed * dt;
+  const ok = (x, z) => groundAt(x, z) - car.y <= 0.75;
+  if (ok(nx, nz)) { car.pos.x = nx; car.pos.z = nz; }
+  else if (ok(nx, pz)) { car.pos.x = nx; car.speed *= 0.9; }
+  else if (ok(px, nz)) { car.pos.z = nz; car.speed *= 0.9; }
+  else { car.speed = 0; }
+
+  // vertical: follow the ground, launch off ramp lips, fall with gravity
+  const g = groundAt(car.pos.x, car.pos.z);
+  if (car.grounded) {
+    if (g < car.y - 0.35) car.grounded = false;
+    else { car.vy = THREE.MathUtils.clamp((g - car.y) / dt, -6, 22); car.y = g; }
+  }
+  if (drive && keys.jump && car.grounded && has('jump')) { car.vy = 11; car.grounded = false; keys.jump = 0; }
+  if (!car.grounded) {
+    car.vy -= G * dt; car.y += car.vy * dt; car.air += dt;
+    if (car.y <= g) {
+      car.y = g; car.grounded = true;
+      if (car.air > 1.5) achieve('air');
+      if (car.air > 0.7 && !state.jumped && Math.hypot(car.pos.x - AREA.campus.c[0], car.pos.z - AREA.campus.c[1]) < 30) { state.jumped = true; save(); toast('Jump complete. Campus flag unlocked.', '#3b82f6'); }
+      car.vy = 0; car.air = 0;
+    }
+  }
+  if (car.y < -1.2) { toast('You drove into the water. Respawning.', '#0ea5e9'); respawn(true); }
+
+  for (const c of colliders) {
+    if (car.y > c.h) continue;
+    const dx = car.pos.x - c.x, dz = car.pos.z - c.z, d = Math.hypot(dx, dz), min = c.r + s.r;
+    if (d < min && d > 1e-4) {
+      car.pos.x = c.x + dx / d * min; car.pos.z = c.z + dz / d * min;
+      const head = Math.abs(Math.sin(car.heading) * dx / d + Math.cos(car.heading) * dz / d);   // 1 = head-on, 0 = glancing
+            car.speed *= 1 - head * 0.85;
+    }
+  }
+  if (Math.abs(car.speed) * 3.6 >= 120) achieve('speed');
+}
+
+function stepProps(dt) {
+  const s = car.s, fx = Math.sin(car.heading), fz = Math.cos(car.heading);
+  for (const b of props) {
+    if (!b.m.visible) continue;
+    const dx = b.p.x - car.pos.x, dz = b.p.z - car.pos.z, d = Math.hypot(dx, dz);
+    if (d < b.r + s.r && car.y < b.p.y + b.hh + 0.4) {
+      if (b.fixed) {
+        if (Math.abs(car.speed) * s.mass >= 30) props.filter(o => o.group === b.group && o.fixed && o.p.distanceTo(b.p) < 6).forEach(o => { o.fixed = false; o.awake = true; });
+        else { const k = (b.r + s.r) / (d || 1); car.pos.x = b.p.x - dx * k; car.pos.z = b.p.z - dz * k; car.speed *= 0.2; once('fw', has('boost') ? 'The firewall holds. Hit it faster: hold Shift to boost.' : 'The firewall holds. You need more speed; boost unlocks at level 2.', '#ef4444'); continue; }
+      }
+      const nX = dx / (d || 1), nZ = dz / (d || 1), sp = Math.abs(car.speed);
+      b.v.x += nX * (2 + sp * 0.7) + fx * car.speed * 0.35; b.v.z += nZ * (2 + sp * 0.7) + fz * car.speed * 0.35; b.v.y += 2 + sp * 0.18;
+      b.w.set((rand() - 0.5) * sp * 0.6, (rand() - 0.5) * 2, (rand() - 0.5) * sp * 0.6);
+      b.awake = true; car.speed *= 1 - 0.12 / s.mass;
+    }
+  }
+  for (let i = 0; i < props.length; i++) for (let j = i + 1; j < props.length; j++) {
+    const a = props[i], b = props[j]; if (!a.awake && !b.awake) continue;
+    const d = a.p.distanceTo(b.p), min = (a.r + b.r) * 0.82;
+    if (d < min && d > 1e-4) {
+      const n = b.p.clone().sub(a.p).divideScalar(d), push = (min - d) / 2;
+      if (b.fixed) { a.p.addScaledVector(n, -push * 2); a.v.reflect(n).multiplyScalar(0.3); continue; }
+      if (a.fixed) { b.p.addScaledVector(n, push * 2); b.v.reflect(n).multiplyScalar(0.3); continue; }
+      a.p.addScaledVector(n, -push); b.p.addScaledVector(n, push);
+      const rel = b.v.clone().sub(a.v).dot(n);
+      if (rel < 0) { a.v.addScaledVector(n, rel * 0.6); b.v.addScaledVector(n, -rel * 0.6); }
+      if (!a.awake && a.v.lengthSq() > 0.5) a.awake = true;
+      if (!b.awake && b.v.lengthSq() > 0.5) b.awake = true;
+    }
+  }
+  for (const b of props) {
+    if (!b.awake) continue;
+    b.v.y -= G * dt; b.p.addScaledVector(b.v, dt);
+    const floor = Math.max(0, groundAt(b.p.x, b.p.z)) + b.hh * 0.85;
+    if (groundAt(b.p.x, b.p.z) < -1) { if (b.p.y < -4) { b.awake = false; b.m.visible = false; } }
+    else if (b.p.y < floor) {
+      b.p.y = floor; b.v.y = Math.abs(b.v.y) > 2 ? -b.v.y * 0.25 : 0; b.v.x *= 0.86; b.v.z *= 0.86; b.w.multiplyScalar(0.85);
+      const snap = v => v + (Math.round(v / (Math.PI / 2)) * Math.PI / 2 - v) * 0.12;
+      b.m.rotation.x = snap(b.m.rotation.x); b.m.rotation.z = snap(b.m.rotation.z);
+      if (b.v.lengthSq() < 0.05 && b.w.lengthSq() < 0.05) b.awake = false;
+    }
+    b.m.rotation.x += b.w.x * dt; b.m.rotation.y += b.w.y * dt; b.m.rotation.z += b.w.z * dt;
+    if (!b.moved && b.p.distanceTo(b.home) > 1.5) { b.moved = true; state.wrecked++; if (state.wrecked >= 25) achieve('wreck'); }
+  }
+  if (!state.rack && props.filter(b => b.group === 'rack' && b.moved).length >= 4) { state.rack = true; save(); toast('Server rack down. Workshop flag unlocked.', '#f97316'); }
+  if (!state.firewall && props.filter(b => b.group === 'wall' && b.moved).length >= 5) { state.firewall = true; save(); toast('Firewall breached. Vault flag unlocked.', '#ef4444'); }
+}
+
+let focus = null, nearFocus = null;
+function enterFocus(f) { focus = f; car.speed = 0; clearKeys(); f.act?.(); showPrompt(); }
+function exitFocus() { focus = null; showPrompt(); }
+function showPrompt() {
+  const el = $('prompt'), f = focus || nearFocus;
+  el.classList.toggle('show', !!f && started && !modalOpen());
+  if (!f) return;
+  el.style.setProperty('--c', f.color);
+  $('prompt-ico').textContent = focus ? '↩' : '🔍';
+  $('prompt-t').textContent = focus ? 'Back to ride' : `Zoom in · ${f.label}`;
+  $('prompt-s').textContent = focus ? 'W / Esc to ride · Enter to read in front' : 'E zoom · Enter read in front';
+}
+$('prompt').onclick = () => focus ? exitFocus() : nearFocus && enterFocus(nearFocus);
+let candidate = null, candidateSince = 0;
+function findFocus() {
+  if (focus || !started) return;
+  const dist = f => Math.hypot(car.pos.x - f.spot[0], car.pos.z - f.spot[1]);
+  // keep the current prompt until you're clearly away (10 m) - no flicker at the edge
+  if (nearFocus && dist(nearFocus) < 10) return;
+  let best = null, bd = 7.5;
+  for (const f of focusables) { const d = dist(f); if (d < bd) { bd = d; best = f; } }
+  // only offer a zoom once you've slowed down near a sign for a moment, not while speeding past
+  const slow = Math.abs(car.speed) < 9, now = performance.now();
+  if (best !== candidate) { candidate = best; candidateSince = now; }
+  const next = best && slow && now - candidateSince > 350 ? best : null;
+  if (next !== nearFocus) { nearFocus = next; showPrompt(); }
+}
+
+const droneHome = new THREE.Vector3(LAB[0] + 2.5, 0.5, LAB[1] + 2.5);
+function stepWorld(t) {
+  const px = car.pos.x, pz = car.pos.z;
+  if (!state.drone) {
+    const a = t * 0.55; drone.position.set(LAB[0] + Math.cos(a) * 10, 1.6 + Math.sin(t * 2) * 0.3, LAB[1] + Math.sin(a) * 10); drone.rotation.y = -a;
+    if (started && Math.hypot(px - drone.position.x, pz - drone.position.z) < 2.6 && car.y < 3) { state.drone = true; save(); toast('Drone caught. Research flag unlocked.', '#8b5cf6'); beep([880, 660], 0.1); }
+  } else drone.position.lerp(droneHome, 0.05);
+  drone.userData.props.forEach((p, i) => p.rotation.y = t * 40 + i);
+
+  if (!started || modalOpen()) { prevZ = pz; return; }
+  GATE_Z.forEach((gz, i) => {
+    if (Math.abs(px) < ROAD_W / 2 + 0.5 && ((prevZ > gz && pz <= gz) || (prevZ < gz && pz >= gz))) {
+      const j = JOBS[i];
+      if (!state.gates.includes(j.id)) { state.gates.push(j.id); save(); const n = JOBS.filter(x => state.gates.includes(x.id)).length; toast(`Gate ${n}/${JOBS.length} · <b>${j.role}</b>`, j.color); if (n === JOBS.length) toast('All gates passed. Career flag unlocked.', '#f59e0b'); }
+      jobDrawer(j);
+    }
+  });
+  prevZ = pz;
+
+  const inside = (a, pad) => a.id === 'career' ? (Math.abs(px) < 12 + pad && pz < -14 + pad && pz > -104 - pad) : Math.hypot(px - a.c[0], pz - a.c[1]) < a.r + pad;
+  const cur = inArea && AREA[inArea];
+  const here = cur && inside(cur, 6) ? cur : AREAS.find(a => inside(a, 0));   // enter at the edge, leave 6 m further out
+  if ((here?.id || null) !== inArea) {
+    inArea = here?.id || null;
+    clearTimeout(leaveT);
+    if (here) { car.lastArea = here.id; if (drawerFor !== here.id && drawerDismissed !== here.id && !(here.id === 'career' && drawerFor?.startsWith('job:'))) areaDrawer(here); }
+    else leaveT = setTimeout(() => { if (!inArea) { if (drawerFor) { $('drawer').classList.remove('open'); drawerFor = null; } drawerDismissed = null; } }, 1200);
+  }
+
+  AREAS.forEach(a => {
+    if (!a.flag) return;
+    const f = flagObjs[a.id], got = a.id === 'root' ? state.root : state.flags.includes(a.id);
+    if (got || (a.id === 'root' && flagsHeld() < 6)) return;
+    if (Math.hypot(px - a.flag[0], pz - a.flag[1]) < 2.6 && Math.abs(car.y - f.y) < 2.2) { if (challengeDone(a.id)) capture(a); else once('flag-' + a.id, challengeHint(a.id), a.color); }
+  });
+  coins.forEach(c => {
+    if (c.m.visible && Math.hypot(px - c.m.position.x, pz - c.m.position.z) < 2.3 && Math.abs(car.y + 1 - c.y) < 2) {
+      c.m.visible = false; beep([988, 1319], 0.08, 'square', 0.04);
+      if (!state.coins.includes(c.name)) progress(() => state.coins.push(c.name), `Hall of Fame coin · <b>${c.name}</b> · +${PTS.coin}`, '#f5b301');
+      if (state.coins.length === HOF.length) achieve('coins');
+    }
+  });
+}
+
+function objective() {
+  const d = (x, z) => Math.hypot(x - car.pos.x, z - car.pos.z);
+  const todo = FLAG_AREAS.filter(a => !state.flags.includes(a.id)).map(a => ({ a, d: a.id === 'career' ? d(0, -20) : d(...a.c) })).sort((x, y) => x.d - y.d)[0];
+  if (todo) return { color: todo.a.color, text: `<b>${todo.a.name}</b> · ${challengeDone(todo.a.id) ? 'grab the flag' : 'flag challenge'} · ${Math.round(todo.d)} m` };
+  if (!state.root) return { color: '#1f2430', text: `<b>Root Hill</b> · the root flag awaits · ${Math.round(d(HILL.x, HILL.z))} m` };
+  if (state.coins.length < HOF.length) return { color: '#f5b301', text: `<b>${HOF.length - state.coins.length} coins</b> still hidden` };
+  return { color: '#16a34a', text: '<b>100% complete!</b> Check the scoreboard' };
+}
+
+/* ---- camera & visuals ---- */
+const look = new THREE.Vector3(), camPos = new THREE.Vector3(), lookT = new THREE.Vector3();
+function camTarget(out) { const c = Math.cos(cam.pitch); out.set(car.pos.x + Math.sin(cam.yaw) * c * cam.dist, car.y + Math.sin(cam.pitch) * cam.dist, car.pos.z + Math.cos(cam.yaw) * c * cam.dist); }
+function snapCam() { camTarget(camPos); camera.position.copy(camPos); look.set(car.pos.x, car.y + 1.4, car.pos.z); camera.lookAt(look); }
+function stepCamera(dt, t) {
+  if (focus) {
+    const k = 1 - Math.exp(-dt * 2.6);
+    camera.position.lerp(focus.C, k); look.lerp(focus.T, k); camera.lookAt(look);
+    if (Math.abs(camera.fov - 45) > 0.05) { camera.fov = THREE.MathUtils.lerp(camera.fov, 45, k); camera.updateProjectionMatrix(); }
+    stepView(dt); return;
+  }
+  // swing gently behind the vehicle while moving forward, unless the player is looking around
+  if (car.speed > 2 && t - cam.lastDrag > 1.5 && !drag) {
+    const diff = ((car.heading + Math.PI - cam.yaw) % (Math.PI * 2) + Math.PI * 3) % (Math.PI * 2) - Math.PI;
+    cam.yaw += diff * (1 - Math.exp(-dt * 2.2));
+  }
+  camTarget(camPos);
+  camera.position.lerp(camPos, 1 - Math.exp(-dt * 5));
+  look.lerp(lookT.set(car.pos.x + Math.sin(car.heading) * 3, car.y + 1.4, car.pos.z + Math.cos(car.heading) * 3), 1 - Math.exp(-dt * 10));
+  camera.lookAt(look);
+  sun.position.set(car.pos.x + 30, 60, car.pos.z + 20); sun.target.position.set(car.pos.x, 0, car.pos.z);
+  stepView(dt);
+}
+function stepView(dt) {
+  const d = $('drawer'), covered = d.classList.contains('open') && !d.classList.contains('min');
+  const mobile = innerWidth <= 760;
+  const tx = covered && !mobile ? 203 : 0, ty = covered && mobile ? innerHeight * 0.2 : 0;
+  const kv = 1 - Math.exp(-dt * 2.2);   // slow, gentle slide
+  view.x += (tx - view.x) * kv; view.y += (ty - view.y) * kv;
+  if (Math.abs(view.x - view.lx) > 0.3 || Math.abs(view.y - view.ly) > 0.3 || view.dirty) {
+    camera.setViewOffset(innerWidth, innerHeight, view.x, view.y, innerWidth, innerHeight);
+    view.lx = view.x; view.ly = view.y; view.dirty = false;
+  }
+}
+const view = { x: 0, y: 0, lx: 0, ly: 0, dirty: true };
+let nightK = state.night ? 1 : 0;
+function stepVisuals(dt, t) {
+  const m = car.m, s = car.s;
+  m.root.position.set(car.pos.x, car.y, car.pos.z); m.root.rotation.y = car.heading;
+  m.body.rotation.z = THREE.MathUtils.lerp(m.body.rotation.z, -car.steer * s.lean * Math.min(1, Math.abs(car.speed) / 16), 1 - Math.exp(-dt * 6));
+  m.body.rotation.x = THREE.MathUtils.lerp(m.body.rotation.x, car.grounded ? 0 : -THREE.MathUtils.clamp(car.vy * 0.03, -0.35, 0.35), 1 - Math.exp(-dt * 6));
+  m.wheels.forEach(w => w.rotation.x += car.speed * dt / m.wheelR);
+  m.steer.forEach(w => w.rotation.y = car.steer * 0.45);
+  m.brakes.forEach(b => b.material.emissiveIntensity = (keys.brake || (keys.down && car.speed > 0)) ? 2.5 : 0.4 + nightK);
+
+  skillOrbs.forEach((o, i) => o.orb.position.y = o.y + Math.sin(t * 1.5 + i) * 0.15);
+  coins.forEach(c => { c.m.rotation.y = t * 2.4 + c.ph; c.m.position.y = c.y + Math.sin(t * 2 + c.ph) * 0.2; });
+  Object.values(flagObjs).forEach((f, i) => {
+    const pos = f.cloth.geometry.attributes.position;
+    for (let k = 0; k < pos.count; k++) { const x = f.base[k * 3]; pos.setZ(k, Math.sin(x * 2.2 - t * 5 + i) * 0.18 * (x / 2.4)); }
+    pos.needsUpdate = true; f.ring.rotation.z = t;
+  });
+  foamMesh.material.opacity = 0.45 + Math.sin(t * 1.4) * 0.15;
+  clouds.forEach((c, i) => { c.position.x += dt * (1 + i * 0.15); if (c.position.x > 180) c.position.x = -180; });
+  pins.forEach(p => { const d = Math.hypot(p.x - car.pos.x, p.z - car.pos.z); p.el.classList.toggle('far', d > 75); p.el.classList.toggle('near', d < 18); });
+
+  nightK = THREE.MathUtils.lerp(nightK, state.night && has('night') ? 1 : 0, 1 - Math.exp(-dt * 2));
+  skyMat.uniforms.top.value.lerpColors(DAY.top, NIGHT.top, nightK); skyMat.uniforms.bottom.value.lerpColors(DAY.bottom, NIGHT.bottom, nightK);
+  scene.fog.color.lerpColors(DAY.fog, NIGHT.fog, nightK);
+  sun.intensity = THREE.MathUtils.lerp(DAY.sun, NIGHT.sun, nightK); hemi.intensity = THREE.MathUtils.lerp(DAY.hemi, NIGHT.hemi, nightK);
+  bulbMat.emissiveIntensity = nightK * 2.2;
+  headlight.intensity = nightK * 220;
+  headlight.position.set(car.pos.x + Math.sin(car.heading) * 1.2, car.y + 1.5, car.pos.z + Math.cos(car.heading) * 1.2);
+  headlight.target.position.set(car.pos.x + Math.sin(car.heading) * 14, car.y, car.pos.z + Math.cos(car.heading) * 14);
+
+  $('spd').textContent = Math.round(Math.abs(car.speed) * 3.6);
+  $('boost-i').style.width = `${car.boost * 100}%`;
+}
+
+/* =====================================================================
+   LOOP
+   ===================================================================== */
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; view.dirty = true; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); labelRenderer.setSize(innerWidth, innerHeight); });
+let frame = 0;
+function loop() {
+  const dt = Math.min(clock.getDelta(), 1 / 30), t = clock.elapsedTime;
+  if (started && !modalOpen() && !document.hidden) state.playSec += dt;
+  stepCar(dt); stepProps(dt); stepWorld(t); stepVisuals(dt, t); stepCamera(dt, t);
+  renderer.render(scene, camera); labelRenderer.render(scene, camera);
+  frame++;
+  if (frame % 3 === 0) {
+    mmx.save(); mmx.beginPath(); mmx.arc(150, 150, 150, 0, Math.PI * 2); mmx.clip(); drawMap(mmx, 300, false); mmx.restore();
+    const o = objective(); $('goal').style.setProperty('--c', o.color); $('goal-t').innerHTML = o.text;
+    findFocus(); if ($('prompt').classList.contains('show') === modalOpen()) showPrompt();
+  }
+  if (frame % 10 === 0 && $('map').classList.contains('open')) drawMap(bmx, bm.width, true);
+  if (frame % 300 === 0) save();
+  requestAnimationFrame(loop);
+}
+
+setRide(state.ride); applyPaint(); refresh(); refreshTouch(); respawn(true); snapCam(); loop();
+$('btn-start').disabled = false;
+$('btn-start').textContent = points() ? `Continue · ${points()} pts →` : 'Start exploring →';
+api('/visit', { vid, page: '3d', ref: document.referrer }).then(d => $('visitors').textContent = `${d.visitors} explorers have visited · ${d.visits} visits`).catch(() => {});
+// Deep links: #play skips the intro, #map opens the map, #go=<area> jumps there (e.g. #go=research)
+{ const h = location.hash.slice(1); if (h) { begin(); if (h === 'map') openModal('map'); if (h.startsWith('go=') && AREA[h.slice(3)]) travel(h.slice(3)); } }
+</script>
 </body>
 </html>

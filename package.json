@@ -1,0 +1,9 @@
+{
+  "name": "d4mr0-portfolio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node dev-server.mjs"
+  },
+  "engines": { "node": ">=18" }
+}
