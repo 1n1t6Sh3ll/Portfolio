@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#bfe3ee">
 <title>Daksh . | CTF Island</title>
 <meta name="description" content="Daksh Khurana's portfolio as a 3D capture-the-flag island. Drive, explore, capture flags and climb the scoreboard.">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -82,6 +85,9 @@
             transform: translateX(calc(100% + 24px)); transition: transform .6s cubic-bezier(.25,.8,.25,1); border-top: 6px solid var(--c, var(--accent)); }
   #drawer.open { transform: none; }
   #drawer { background: #fffdf8; }
+  /* a closed panel slides away and is then fully hidden: on phones it would otherwise rest behind the touch controls */
+  #drawer:not(.open) { visibility: hidden; transition: transform .45s ease-in, visibility 0s linear .45s; }
+  #drawer.open { visibility: visible; }
   #drawer.min .body { display: none; }
   @media (max-width: 760px) { #drawer.min #d-title::after { content: '  · tap to read'; font-size: 12px; font-weight: 500; color: var(--ink-3); } }
   #drawer.min header { cursor: pointer; }
@@ -183,7 +189,7 @@
   .places small.ok { color: var(--ok); }
 
   #touch { position: fixed; inset: auto 0 0 0; z-index: 12; display: none; justify-content: space-between; padding: 14px; pointer-events: none; }
-  #touch div { display: flex; gap: 8px; pointer-events: auto; align-items: flex-end; }
+  #touch div { display: flex; gap: 8px; pointer-events: auto; align-items: flex-end; align-self: flex-end; }   /* only as tall as its buttons */
   #touch button { width: 60px; height: 60px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); font-size: 20px; touch-action: none; user-select: none; -webkit-user-select: none; }
   #touch button.on { background: var(--accent); color: #fff; }
   #touch button.locked { display: none; }
@@ -267,6 +273,49 @@
     #prompt { bottom: 12px; }
     #toasts { top: 6px; bottom: auto; }
     .modal { max-height: calc(100dvh - 12px); }
+  }
+
+  /* ---------- iPhone: notch / Dynamic Island / home bar safe areas, Safari touch quirks ---------- */
+  :root { --st: env(safe-area-inset-top, 0px); --sr: env(safe-area-inset-right, 0px); --sb: env(safe-area-inset-bottom, 0px); --sl: env(safe-area-inset-left, 0px); }
+  html, body { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+  button, a, #touch button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  #hud, #side, #touch, #speedo, #prompt, .pin { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #hud { top: calc(16px + var(--st)); left: calc(16px + var(--sl)); }
+  #side { top: calc(16px + var(--st)); right: calc(16px + var(--sr)); }
+  #speedo { right: calc(16px + var(--sr)); bottom: calc(16px + var(--sb)); }
+  #toasts { top: calc(16px + var(--st)); }
+  #touch { padding-left: calc(14px + var(--sl)); padding-right: calc(14px + var(--sr)); padding-bottom: calc(14px + var(--sb)); }
+  .overlay { padding: max(16px, var(--st)) max(16px, var(--sr)) max(16px, var(--sb)) max(16px, var(--sl)); }
+  @media (max-width: 760px) {
+    #hud { top: calc(8px + var(--st)); left: calc(8px + var(--sl)); }
+    #side { top: calc(8px + var(--st)); right: calc(8px + var(--sr)); }
+    #drawer { left: calc(8px + var(--sl)); right: calc(8px + var(--sr)); bottom: calc(8px + var(--sb)); }
+    .touch #drawer { bottom: calc(148px + var(--sb)); max-height: calc(100dvh - 330px - var(--st) - var(--sb)); }   /* stays below the Map/Skills buttons */
+    .touch #speedo { left: calc(10px + var(--sl)); right: auto; bottom: calc(82px + var(--sb)); }
+    .touch #prompt { bottom: calc(236px + var(--sb)); }
+    #toasts { top: auto; bottom: calc(200px + var(--sb)); }
+    #touch { padding-left: calc(10px + var(--sl)); padding-right: calc(10px + var(--sr)); padding-bottom: calc(10px + var(--sb)); }
+    .overlay { padding: max(8px, var(--st)) max(8px, var(--sr)) max(8px, var(--sb)) max(8px, var(--sl)); }
+    .modal { max-height: calc(100dvh - 16px - var(--st) - var(--sb)); }
+  }
+  @media (max-width: 380px) {   /* iPhone SE / mini */
+    #hud { width: calc(100vw - 140px - var(--sl) - var(--sr)); }
+    .flags b { width: 14px; height: 14px; }
+    #touch button { width: 54px; height: 54px; }
+    #touch .pad { grid-template-columns: repeat(2, 54px); }
+    #intro h1 { font-size: 30px; }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    #hud { top: calc(6px + var(--st)); left: calc(6px + var(--sl)); }
+    #side { top: calc(6px + var(--st)); right: calc(6px + var(--sr)); }
+    #drawer { top: calc(104px + var(--st)); bottom: calc(8px + var(--sb)); }
+    .touch #drawer { right: calc(150px + var(--sr)); bottom: calc(8px + var(--sb)); }
+    #drawer.min, .touch #drawer.min { bottom: auto; }   /* collapsed = just the title bar */
+    #touch { padding: 6px calc(10px + var(--sr)) calc(6px + var(--sb)) calc(10px + var(--sl)); }
+    .touch #speedo { left: calc(6px + var(--sl)); right: auto; bottom: auto; top: calc(112px + var(--st)); }   /* under the HUD, clear of the panel */
+    .touch #prompt { bottom: calc(12px + var(--sb)); }
+    #toasts { top: calc(6px + var(--st)); bottom: auto; }
+    .modal { max-height: calc(100dvh - 12px - var(--st) - var(--sb)); }
   }
 </style>
 <script type="importmap">
@@ -1355,6 +1404,7 @@ canvas.addEventListener('pointermove', e => {
 });
 canvas.addEventListener('pointerleave', () => $('tip').classList.remove('show'));
 const touches = new Map(); let pinch = null;
+['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));   // iOS: no page zoom
 const pinchDist = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
 canvas.addEventListener('pointerdown', e => {
   touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
