@@ -1854,19 +1854,11 @@ function stepCamera(dt, t) {
   sun.position.set(car.pos.x + 30, 60, car.pos.z + 20); sun.target.position.set(car.pos.x, 0, car.pos.z);
   stepView(dt);
 }
-function stepView(dt) {
+function stepView() {
+  // The view stays put when panels open (no sliding). Only track whether a panel is expanded, for prompt placement.
   const d = $('drawer'), covered = d.classList.contains('open') && !d.classList.contains('min');
   document.documentElement.classList.toggle('drawer-up', covered);
-  const mobile = innerWidth <= 760;
-  const tx = covered && !mobile ? 203 : 0, ty = covered && mobile ? innerHeight * 0.2 : 0;
-  const kv = 1 - Math.exp(-dt * 2.2);   // slow, gentle slide
-  view.x += (tx - view.x) * kv; view.y += (ty - view.y) * kv;
-  if (Math.abs(view.x - view.lx) > 0.3 || Math.abs(view.y - view.ly) > 0.3 || view.dirty) {
-    camera.setViewOffset(innerWidth, innerHeight, view.x, view.y, innerWidth, innerHeight);
-    view.lx = view.x; view.ly = view.y; view.dirty = false;
-  }
 }
-const view = { x: 0, y: 0, lx: 0, ly: 0, dirty: true };
 let nightK = state.night ? 1 : 0;
 function stepVisuals(dt, t) {
   const m = car.m, s = car.s;
@@ -1904,7 +1896,7 @@ function stepVisuals(dt, t) {
 /* =====================================================================
    LOOP
    ===================================================================== */
-addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; view.dirty = true; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); labelRenderer.setSize(innerWidth, innerHeight); });
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); labelRenderer.setSize(innerWidth, innerHeight); });
 let frame = 0;
 function loop() {
   const dt = Math.min(clock.getDelta(), 1 / 30), t = clock.elapsedTime;
