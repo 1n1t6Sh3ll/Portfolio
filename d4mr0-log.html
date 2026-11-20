@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex">
+<meta name="robots" content="noindex, nofollow">
 <title>Visitor Log</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -31,7 +31,7 @@
   <h1>~/<span>visitor-log</span></h1>
   <p class="muted">Page views and scoreboard runs. Private to you: includes visitor IP addresses, kept until you delete them.</p>
   <form id="f">
-    <input id="key" type="password" placeholder="Admin key" autocomplete="current-password" required>
+    <input id="key" type="text" placeholder="Access key" autocomplete="off" spellcheck="false" required>
     <select id="filter"><option value="">All events</option><option value="visit">Visits</option><option value="score">Scores</option></select>
     <button>Load</button>
   </form>

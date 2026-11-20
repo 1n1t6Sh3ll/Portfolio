@@ -1,4 +1,4 @@
-// Shared game rules: keep in sync with the RULES block in 3d.html
+// Shared game rules: keep in sync with the RULES block in index.html
 export const PTS = { flag: 100, coin: 25, root: 300 };
 export const TOTAL = { flags: 6, coins: 13 };
 export const MAX_PTS = TOTAL.flags * PTS.flag + TOTAL.coins * PTS.coin + PTS.root; // 1225
